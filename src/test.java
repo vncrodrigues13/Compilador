@@ -1,12 +1,19 @@
+
 public class test {
-    
-import Scanner.Scanner;
     public static void main(String[] args) {
-        String path = ".\\src\\arquivo\\file.txt";
-        Scanner scan = new Scanner(path);
-        scan.lerCodigo();
+        int contador, linha;
+
+        contador = linha = 0;
+
+        while (contador != 10) {
+            if (contador % 2 == 0) {
+                contador++;
+                continue;
+            }
+            linha++;
+        }
+        System.out.println("Contador => " + contador);
+        System.out.println("Linha => " + linha);
+
     }
-
-    
-
 }

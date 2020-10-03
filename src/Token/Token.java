@@ -1,12 +1,13 @@
 package Token;
 
-import Exception.IdentificadorMalFormado;
+import Exception.CharMalFormadoException;
+import Exception.FloatMalFormadoException;
 
 public class Token {
     private String lexema;
     private int classificacao;
 
-    public Token(String tokenLido) throws IdentificadorMalFormado {
+    public Token(String tokenLido) throws CharMalFormadoException, FloatMalFormadoException {
         this.classificacao = classificarToken(tokenLido);
     }
 
@@ -26,7 +27,7 @@ public class Token {
         this.classificacao = valor;
     }
 
-    public int classificarToken(String tokenLido) throws IdentificadorMalFormado {
+    public int classificarToken(String tokenLido) throws CharMalFormadoException, FloatMalFormadoException {
         if (tokenLido.equals("main")) {
             return 0;
         } else if (tokenLido.equals("if")) {
@@ -85,6 +86,8 @@ public class Token {
             return 42;
         }else if (tokenLido.equals("/")){
             return 43;
+        }else if (tokenLido.equals("\t")){
+            return 150;
         }else {
             // preciso identificar se eh um caractere, um inteiro, um float ou um identificador
             if (validarInt(tokenLido)){
@@ -120,9 +123,13 @@ public class Token {
         return true;
     }
 
-    private boolean validarChar(String element) {
+    private boolean validarChar(String element) throws CharMalFormadoException {
         // ele verifica a construcao do char se eh um: ' -> element -> '
-        return element.charAt(0) == '\'' && Character.isLetterOrDigit(element.charAt(1)) && element.charAt(2) == '\'';
+        if (element.charAt(0) == '\'' && Character.isLetterOrDigit(element.charAt(1)) && element.charAt(2) == '\''){
+            return true;
+        } else {
+            throw new CharMalFormadoException();
+        }
     }
 
     private boolean validarInt(String element){
@@ -137,22 +144,37 @@ public class Token {
         return contador > 0;
     }
 
-    private boolean validarFloat(String element){
+    private boolean validarFloat(String element) throws FloatMalFormadoException{
         boolean existePonto = false;
         boolean valido = false;
-        for (int x = 0; x < element.length(); x++){
+        int posicaodoPonto = 0;
+        int x;
+        for (x = 0; x < element.length(); x++){
             if (!Character.isDigit(element.charAt(x)) && element.charAt(x) != '.'){
                 // se conter um elemento que nao seja um numero, ou um ponto, retorna falso
                 return false;
             }
             if (element.charAt(x) == '.'){
+                posicaodoPonto = x;
                 existePonto = true;
+                break;
             }
-
-            if (Character.isDigit(element.charAt(x)) && existePonto){
-                // se houver algum numero apos o ponto, ele bool valido = true;
-                valido = true;
+            if (existePonto && posicaodoPonto < element.length()){
+                for (; x < element.length(); x++){
+                    if (!Character.isDigit(element.charAt(x)) && element.charAt(x) != '.'){
+                        // se conter um elemento que nao seja um numero, ou um ponto, retorna falso
+                        return false;
+                    }
+                    if (Character.isDigit(element.charAt(x))){
+                        valido = true;
+                    }
+                }
+            }else{
+                // caso nao exista ponto ou dps do ponto nao exista nenhum elemento
+                throw new FloatMalFormadoException();
             }
+            
+            
         }
         return valido;
     }
