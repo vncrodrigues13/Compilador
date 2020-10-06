@@ -1,7 +1,7 @@
 package Exception;
 
 public class tokenInvalido extends Exception {
-    public TokenInvalido(){
+    public tokenInvalido(){
         System.out.println("Token invalido");
     }
 }

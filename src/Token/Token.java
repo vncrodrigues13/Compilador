@@ -2,7 +2,7 @@ package Token;
 
 import Exception.CharMalFormadoException;
 import Exception.FloatMalFormadoException;
-
+import Buffer.Buffer;
 public class Token {
     private String lexema;
     private int classificacao;
@@ -128,7 +128,7 @@ public class Token {
         if (element.charAt(0) == '\'' && Character.isLetterOrDigit(element.charAt(1)) && element.charAt(2) == '\''){
             return true;
         } else {
-            throw new CharMalFormadoException();
+            return false;
         }
     }
 
@@ -178,5 +178,15 @@ public class Token {
         }
         return valido;
     }
+
+
+    @Override
+    public String toString() {
+        return "{" +
+            " lexema='" + lexema + "'" +
+            ", classificacao='" + classificacao + "'" +
+            ",coluna="+Buffer.getColuna()+" }";
+    }
+
 
 }

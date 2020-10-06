@@ -17,46 +17,51 @@ public class ScannerCompilador {
     public ScannerCompilador(String pathToFile) throws IOException {
         leitor = new BufferedReader(new FileReader(pathToFile));
         buffer = new Buffer();
-        this.linha = 0;
+        linha = 0;
         line = leitor.readLine();
     }
 
-    private Token lerCodigo() throws IOException, InteiroMalFormadoException, FloatMalFormadoException,
-            ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException {
-        boolean acabouLinha = false;
+    private Token lerCodigo() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
+            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
         Token tokenBuffer;
-        int contador = 0;
-        while (this.line != null) {
-            if (contador != this.linha) {
-                // vai pular do começo do programa ate a linha em que estava sendo lida
-                contador++;
-                continue;
-            } else {
+        try{
+            while (line != null) {
                 // caso esteja na linha que estava sendo lida anteriormente
                 tokenBuffer = buffer.scan(line);
-                
+                System.out.println(tokenBuffer);
                 if (tokenBuffer != null) {
                     return tokenBuffer;
                 } else {
-                    // se acabar a linha  (tokenBuffer == null)
+                    // se acabar a linha (tokenBuffer == null)
+                    System.out.println("read line");
                     line = leitor.readLine();
-                    if (line != null){
-                        this.linha++;
+                    if (line != null) {
+                        linha++;
                     }
                 }
             }
+        }catch (StringIndexOutOfBoundsException e){
+            if (Buffer.isComentarioMultiLinha()) {
+                throw new EOFemComentarioMultilinha();
+            }
+            throw new EOF();
         }
         // Caso nao exista nenhuma linha de codigo ele retorna EOF;
+        if (Buffer.isComentarioMultiLinha()) {
+            throw new EOFemComentarioMultilinha();
+        }
         throw new EOF();
 
     }
 
-    public Token getNextToken() throws IOException, InteiroMalFormadoException, FloatMalFormadoException,
-            ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException {
+    public Token getNextToken() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
+            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
+                System.out.println("Proximo token");
         return lerCodigo();
     }
 
     public static int getLinha() {
         return linha;
     }
+
 }
