@@ -28,12 +28,10 @@ public class ScannerCompilador {
             while (line != null) {
                 // caso esteja na linha que estava sendo lida anteriormente
                 tokenBuffer = buffer.scan(line);
-                System.out.println(tokenBuffer);
                 if (tokenBuffer != null) {
                     return tokenBuffer;
                 } else {
                     // se acabar a linha (tokenBuffer == null)
-                    System.out.println("read line");
                     line = leitor.readLine();
                     if (line != null) {
                         linha++;
@@ -56,7 +54,6 @@ public class ScannerCompilador {
 
     public Token getNextToken() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
             CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
-                System.out.println("Proximo token");
         return lerCodigo();
     }
 

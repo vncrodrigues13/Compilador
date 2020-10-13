@@ -1,5 +1,6 @@
-if (x == 2){
-    ports = 23;
+int main()
+{
+    do
+        vinicius = 12;
+    while (vinicius <=1);
 }
-
-/*

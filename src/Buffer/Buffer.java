@@ -53,11 +53,11 @@ public class Buffer {
 
             } else if (linhaParaArray[x] == '!' || linhaParaArray[x] == '=' || linhaParaArray[x] == '>'
                     || linhaParaArray[x] == '<') {
-
+                        coluna++; // vai para proxima coluna
                 // precisa fazer o LOOKAHEAD
                 if (!comentario_multilinha_aberto) {
                     strBuilder.append(linhaParaArray[x]); // adiciona o valor lido
-                    coluna++; // vai para proxima coluna
+                    
                     return lookAhead(); // vai adicionar o prox simbolo e retornar o token formado
                 }
 
@@ -89,47 +89,53 @@ public class Buffer {
                 }
 
             } else if (linhaParaArray[x] == ';') {
+                coluna++;
                 if (!comentario_multilinha_aberto) {
-                    coluna++;
+                    
                     return new Token(";");
                 }
             } else if (linhaParaArray[x] == '(') {
+                coluna++;
                 if (!comentario_multilinha_aberto) {
-                    coluna++;
+                    
                     return new Token("(");
                 }
             } else if (linhaParaArray[x] == ')') {
+                coluna++;
                 if (!comentario_multilinha_aberto) {
-                    coluna++;
+                    
                     return new Token(")");
                 }
             } else if (linhaParaArray[x] == '{') {
+                coluna++;
                 if (!comentario_multilinha_aberto) {
-                    coluna++;
+                    
                     return new Token("{");
                 }
             } else if (linhaParaArray[x] == '}') {
+                coluna++;
                 if (!comentario_multilinha_aberto) {
-                    coluna++;
+                    
                     return new Token("}");
                 }
             } else if (linhaParaArray[x] == '+') {
+                coluna++;
                 if (!comentario_multilinha_aberto) {
-                    coluna++;
                     return new Token("+");
                 }
             } else if (linhaParaArray[x] == '-') {
+                coluna++;
                 if (!comentario_multilinha_aberto) {
-                    coluna++;
+                    
                     return new Token("-");
                 }
             } else if (linhaParaArray[x] == '*') {
                 strBuilder.append('*');
                 coluna++;
                 if (comentario_multilinha_aberto) {
-                    //se o comentario multilinha estiver em aberto
+                    // se o comentario multilinha estiver em aberto
                     return checkFinishComentario();
-                }else{
+                } else {
                     return new Token(strBuilder.toString());
                 }
             } else if (linhaParaArray[x] == '/') {
@@ -139,9 +145,16 @@ public class Buffer {
                     return checarComentarioMultilinha();
                 }
             } else if (linhaParaArray[x] == '\t') {
+                coluna += 4;
                 if (!comentario_multilinha_aberto) {
-                    coluna += 4;
+                    
                     return new Token("\t");
+                }
+            }else if (linhaParaArray[x] == ','){
+                coluna++;
+                if (!comentario_multilinha_aberto){
+                    
+                    return new Token(",");
                 }
             } else {
                 if (!comentario_multilinha_aberto) {
@@ -190,12 +203,11 @@ public class Buffer {
             comentario_multilinha_aberto = true;
             coluna++;
             return new Token(strBuilder.toString());
-        } else if (linhaParaArray[coluna] == '/'){
+        } else if (linhaParaArray[coluna] == '/') {
             // formar o token '//'
             coluna++;
             return null;
-        }  
-        else {
+        } else {
             return new Token(strBuilder.toString());
         }
     }

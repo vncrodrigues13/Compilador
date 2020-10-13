@@ -2,10 +2,12 @@
 import java.io.FileNotFoundException;
 import Scanner.ScannerCompilador;
 import java.io.IOException;
+import Parser.Parser;
 import Exception.*;
 public class Test {
     public static void main(String [] args) throws IOException, FloatMalFormadoException,ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException,EOFemComentarioMultilinha {
-            String path = "C:\\Users\\User\\Documents\\Vinicius\\Projects\\Java\\Compilador\\src\\file\\file.txt";
+            String path = "C:\\Users\\User\\Documents\\Vinicius\\Projects\\Java\\Compilador\\src\\file\\test.txt";
+            // String path = args[0];
             ler(path);
     }
 
@@ -14,26 +16,12 @@ public class Test {
             CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
         try{
             ScannerCompilador leitor = new ScannerCompilador(path);
-            leitor.getNextToken();
-            leitor.getNextToken();
-            leitor.getNextToken();
-            leitor.getNextToken();
-            leitor.getNextToken();
-            leitor.getNextToken();
-            leitor.getNextToken();
-            leitor.getNextToken();
-            leitor.getNextToken();
-            leitor.getNextToken();
-            leitor.getNextToken();
-            leitor.getNextToken();
-            leitor.getNextToken();
-            leitor.getNextToken();
-            
-            
-        
+            Parser pars = new Parser(leitor);
+            pars.programa();
         }catch (FileNotFoundException e){
             e.printStackTrace();
         }
     }
+    
 
 }
