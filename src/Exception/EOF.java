@@ -1,5 +1,7 @@
 package Exception;
 
 public class EOF extends Exception {
-    public EOF(){}
+    public EOF(){
+        System.out.println("End of file");
+    }
 }

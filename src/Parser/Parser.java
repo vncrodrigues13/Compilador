@@ -9,58 +9,64 @@ import Scanner.ScannerCompilador;
 public class Parser {
     private ScannerCompilador scan;
     private static Token token_atual;
+    private boolean comentarioMultilinhaAberto;
 
     public Parser(ScannerCompilador scan) {
         this.scan = scan;
         token_atual = null;
     }
 
-
     public void programa() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
             CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
         getNextToken();
-        if (token_atual.getValor() == 6){
+        if (token_atual.getValor() == 6) {
             getNextToken();
-            if (token_atual.getValor() == 0){
+            if (token_atual.getValor() == 0) {
+                getNextToken();
+                if (token_atual.getValor() == 20) {
                     getNextToken();
-                    if (token_atual.getValor() == 20){
-                        getNextToken();
-                        if (token_atual.getValor() == 21){
-                            bloco();
-                        }
+                    if (token_atual.getValor() == 21) {
+                        bloco();
                     }
+                }
             }
         }
     }
 
     public void bloco() throws IOException, EOFemComentarioMultilinha, FloatMalFormadoException,
             ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException {
-                // “{“ {<decl_var>}* {<comando>}* '}'
-                boolean createVar,createCommand;
+        // “{“ {<decl_var>}* {<comando>}* '}'
+        boolean createVar, createCommand;
         getNextToken();
         if (token_atual.getValor() == 22) {
-            do{
+            do {
                 createVar = false;
                 getNextToken();
-                if (token_atual.getValor() >=6 && token_atual.getValor() <= 8){
+                if (token_atual.getValor() >= 6 && token_atual.getValor() <= 8) {
                     createVar = true;
                     declararVariavel();
                 }
-            }while (createVar);
+            } while (createVar);
             // o ponteiro ja vem posicionado pelo parte de declaracao de var ^
-            do{
+            do {
                 createCommand = false;
                 if (token_atual.getValor() == 99 || token_atual.getValor() == 22 || token_atual.getValor() == 3
-                || token_atual.getValor() == 4 || token_atual.getValor() == 1){
+                        || token_atual.getValor() == 4 || token_atual.getValor() == 1) {
                     comando();
                     createCommand = true;
-                    getNextToken();
+                    try{
+                        getNextToken();
+                    }catch (Exception e){
+                        //quando ele busca algum token além do EOF
+                    }
                 }
-            }while (createCommand);
+            } while (createCommand);
             // <comando>
-
             if (token_atual.getValor() == 23) {
                 // caso feche o bloco
+                if (comentarioMultilinhaAberto){
+                    throw new EOFemComentarioMultilinha();
+                }
             }
         }
     }
@@ -89,41 +95,23 @@ public class Parser {
         }
     }
 
-    
-
-    public void  comando() throws IOException, EOFemComentarioMultilinha, FloatMalFormadoException,
+    public void comando() throws IOException, EOFemComentarioMultilinha, FloatMalFormadoException,
             ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException {
-        
         if (token_atual.getValor() == 1) {
             // if '(' <exp_relacional> ')' '{' <comando> '}' else '{' <comando> '}'
             getNextToken();
-            if (token_atual.getValor() == 20){
+            if (token_atual.getValor() == 20) {
                 expr_relacional();
-                if (token_atual.getValor() == 21){
+                if (token_atual.getValor() == 21) {
                     // fecha parenteses
                     getNextToken();
-                    if (token_atual.getValor() == 22){
-                        //abre chave
+                    comando();
+                    System.out.println("end if");
+                    if (token_atual.getValor() == 2) {
+                        // else
                         getNextToken();
                         comando();
-                        if (token_atual.getValor() == 23){
-                            //fecha chave
-                            getNextToken();
-                            if (token_atual.getValor() == 2){
-                                //else
-                                if (token_atual.getValor() == 22){
-                                    //abre chave
-                                    comando();
-                                    if (token_atual.getValor() == 23){
-                                        //fecha chave
-                                        //acabou o comando
-                                        System.out.println("acabou comando");
-                                    }
-                                }
-                            }else{
-                                // caso nao exista um else
-                            }
-                        }
+                        System.out.println("end else");
                     }
                 }
             }
@@ -134,8 +122,6 @@ public class Parser {
             // para ser um comando basico, o first tem que ser um <id> ou uma '{'
             // <comandoBasico> ==>> <atribuicao> || <bloco>
             comando_basico();
-        } else {
-            // erro
         }
     }
 
@@ -166,7 +152,6 @@ public class Parser {
                 if (token_atual.getValor() == 21) {
                     // fecha parenteses
                     getNextToken();
-                    System.out.println(token_atual);
                     comando();
                     // acabou o loop 'while'
                     System.out.println("End iteração while");
@@ -193,13 +178,13 @@ public class Parser {
                 }
             }
         }
-        
+
     }
 
     public void atribuicao() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
             CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
         // <id> "=" <expr_arit> ";"
-        
+
         if (token_atual.getValor() == 99) {
             getNextToken();
             if (token_atual.getValor() == 16) {
@@ -250,7 +235,7 @@ public class Parser {
                 break;
         }
         System.out.println("end expr relacional");
-        
+
     }
 
     public void expr_arit() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
@@ -269,7 +254,7 @@ public class Parser {
             getNextToken();
             expr_arit();
         }
-        
+
         System.out.println("end expr aritmetica");
     }
 
@@ -280,10 +265,10 @@ public class Parser {
         // gero dou um loop com recursao
         fator();
         // pega o primeiro fator
-        try{
+        try {
             getNextToken();
-        }catch (EOF e){
-             
+        } catch (EOF e) {
+
         }
         // pega o token para validar se existe alguma multiplicacao ou divisao
         if (token_atual.getValor() == 42 || token_atual.getValor() == 43) {
@@ -327,6 +312,16 @@ public class Parser {
     private void getNextToken() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
             CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
         token_atual = scan.getNextToken();
+
+        if (token_atual.getValor() == 31){
+            this.comentarioMultilinhaAberto = true;
+            token_atual = scan.getNextToken();//ta dando EOF comentário multilinha
+        }
+
+        if (token_atual.getValor() == 32){
+            this.comentarioMultilinhaAberto = false;
+            token_atual = scan.getNextToken();
+        }
     }
 
 }

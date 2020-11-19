@@ -1,9 +1,9 @@
 int main()
 {
-    processamento = 23;
-    if (processamento <= 2){
-        while (i >= 2)
-            processamento = 2;
-        
-    }
+    int file;
+
+    file = 'c';
+
+    /*
+    
 }

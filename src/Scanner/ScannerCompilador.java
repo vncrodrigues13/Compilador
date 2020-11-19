@@ -24,31 +24,27 @@ public class ScannerCompilador {
     private Token lerCodigo() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
             CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
         Token tokenBuffer;
-        try{
-            while (line != null) {
-                // caso esteja na linha que estava sendo lida anteriormente
-                tokenBuffer = buffer.scan(line);
-                if (tokenBuffer != null) {
-                    return tokenBuffer;
-                } else {
-                    // se acabar a linha (tokenBuffer == null)
-                    line = leitor.readLine();
-                    if (line != null) {
-                        linha++;
-                    }
+
+        while (line != null) {
+            // caso esteja na linha que estava sendo lida anteriormente
+            tokenBuffer = buffer.scan(line);
+            if (tokenBuffer != null) {
+                return tokenBuffer;
+            } else {
+                // se acabar a linha (tokenBuffer == null)
+                line = leitor.readLine();
+                if (line != null) {
+                    linha++;
                 }
             }
-        }catch (StringIndexOutOfBoundsException e){
-            if (Buffer.isComentarioMultiLinha()) {
-                throw new EOFemComentarioMultilinha();
-            }
+        }
+
+        if (Buffer.isComentarioMultiLinha()) {
+            throw new EOFemComentarioMultilinha();
+        }else{
             throw new EOF();
         }
         // Caso nao exista nenhuma linha de codigo ele retorna EOF;
-        if (Buffer.isComentarioMultiLinha()) {
-            throw new EOFemComentarioMultilinha();
-        }
-        throw new EOF();
 
     }
 

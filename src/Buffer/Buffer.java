@@ -25,144 +25,149 @@ public class Buffer {
         linhaParaArray = line.toCharArray();
         int colunaTemporaria;
         strBuilder = new StringBuilder();
-        if (this.linha != null && this.linha.equals(line)) {
+        if (line != null) {
+            if (this.linha != null && this.linha.equals(line)) {
 
-            // se a linha que for passada ja estiver em analise, continue.
-            colunaTemporaria = coluna;
-            // caso a linha ja tenha sido lida, preciso checar se ela ja acabou de ser lida
-            if (coluna >= line.length()) {
-                // caso a linha ja tenha sido acabada;
-                return null;
-            }
-        } else {
-            // caso essa linha nunca tenha sido lida
-            colunaTemporaria = 0;
-            coluna = 0;
-            this.linha = line;
-        }
-
-        for (int x = colunaTemporaria; x < linhaParaArray.length; x++) {
-
-            // o valor da colunaTemporaria, se a linha ja estiver sendo lida, vai ser a
-            // continuacao
-            // caso n, vai ser igual a 0
-            if (linhaParaArray[x] == ' ') {
-                // se o buffer pegar um espaço em branco ele lê a prox posição
-                coluna++;
-                continue;
-
-            } else if (linhaParaArray[x] == '!' || linhaParaArray[x] == '=' || linhaParaArray[x] == '>'
-                    || linhaParaArray[x] == '<') {
-                        coluna++; // vai para proxima coluna
-                // precisa fazer o LOOKAHEAD
-                if (!comentario_multilinha_aberto) {
-                    strBuilder.append(linhaParaArray[x]); // adiciona o valor lido
-                    
-                    return lookAhead(); // vai adicionar o prox simbolo e retornar o token formado
-                }
-
-            } else if (Character.isDigit(linhaParaArray[x])) {
-
-                // apenas um valor float ou inteiro comeca com numero
-                if (!comentario_multilinha_aberto) {
-                    return buildInteiro();
-                }
-
-            } else if (linhaParaArray[x] == '.') {
-                // se houver ponto forma float
-                if (!comentario_multilinha_aberto) {
-                    strBuilder.append('.');
-                    return buildFloat();
-                }
-
-            } else if (Character.isLetter(linhaParaArray[x])) {
-                // caso leia uma letra, so pode ser identificador ou palavra restrita
-                if (!comentario_multilinha_aberto) {
-                    return continuarScan();
-                }
-
-            } else if (linhaParaArray[x] == '\'') {
-                // caso ele leia uma '
-                if (!comentario_multilinha_aberto) {
-                    strBuilder.append(linhaParaArray[x]);
-                    return readChar();
-                }
-
-            } else if (linhaParaArray[x] == ';') {
-                coluna++;
-                if (!comentario_multilinha_aberto) {
-                    
-                    return new Token(";");
-                }
-            } else if (linhaParaArray[x] == '(') {
-                coluna++;
-                if (!comentario_multilinha_aberto) {
-                    
-                    return new Token("(");
-                }
-            } else if (linhaParaArray[x] == ')') {
-                coluna++;
-                if (!comentario_multilinha_aberto) {
-                    
-                    return new Token(")");
-                }
-            } else if (linhaParaArray[x] == '{') {
-                coluna++;
-                if (!comentario_multilinha_aberto) {
-                    
-                    return new Token("{");
-                }
-            } else if (linhaParaArray[x] == '}') {
-                coluna++;
-                if (!comentario_multilinha_aberto) {
-                    
-                    return new Token("}");
-                }
-            } else if (linhaParaArray[x] == '+') {
-                coluna++;
-                if (!comentario_multilinha_aberto) {
-                    return new Token("+");
-                }
-            } else if (linhaParaArray[x] == '-') {
-                coluna++;
-                if (!comentario_multilinha_aberto) {
-                    
-                    return new Token("-");
-                }
-            } else if (linhaParaArray[x] == '*') {
-                strBuilder.append('*');
-                coluna++;
-                if (comentario_multilinha_aberto) {
-                    // se o comentario multilinha estiver em aberto
-                    return checkFinishComentario();
-                } else {
-                    return new Token(strBuilder.toString());
-                }
-            } else if (linhaParaArray[x] == '/') {
-                strBuilder.append(linhaParaArray[x]);
-                coluna++;
-                if (!comentario_multilinha_aberto) {
-                    return checarComentarioMultilinha();
-                }
-            } else if (linhaParaArray[x] == '\t') {
-                coluna += 4;
-                if (!comentario_multilinha_aberto) {
-                    
-                    return new Token("\t");
-                }
-            }else if (linhaParaArray[x] == ','){
-                coluna++;
-                if (!comentario_multilinha_aberto){
-                    
-                    return new Token(",");
+                // se a linha que for passada ja estiver em analise, continue.
+                colunaTemporaria = coluna;
+                // caso a linha ja tenha sido lida, preciso checar se ela ja acabou de ser lida
+                if (coluna >= line.length()) {
+                    // caso a linha ja tenha sido acabada;
+                    return null;
                 }
             } else {
-                if (!comentario_multilinha_aberto) {
-                    throw new CaractereInvalidoException();
+                // caso essa linha nunca tenha sido lida
+                colunaTemporaria = 0;
+                coluna = 0;
+                this.linha = line;
+            }
+
+            for (int x = colunaTemporaria; x < linhaParaArray.length; x++) {
+
+                // o valor da colunaTemporaria, se a linha ja estiver sendo lida, vai ser a
+                // continuacao
+                // caso n, vai ser igual a 0
+                if (linhaParaArray[x] == ' ') {
+                    // se o buffer pegar um espaço em branco ele lê a prox posição
+                    coluna++;
+                    continue;
+
+                } else if (linhaParaArray[x] == '!' || linhaParaArray[x] == '=' || linhaParaArray[x] == '>'
+                        || linhaParaArray[x] == '<') {
+                    coluna++; // vai para proxima coluna
+                    // precisa fazer o LOOKAHEAD
+                    if (!comentario_multilinha_aberto) {
+                        strBuilder.append(linhaParaArray[x]); // adiciona o valor lido
+
+                        return lookAhead(); // vai adicionar o prox simbolo e retornar o token formado
+                    }
+
+                } else if (Character.isDigit(linhaParaArray[x])) {
+
+                    // apenas um valor float ou inteiro comeca com numero
+                    if (!comentario_multilinha_aberto) {
+                        return buildInteiro();
+                    }
+
+                } else if (linhaParaArray[x] == '.') {
+                    // se houver ponto forma float
+                    if (!comentario_multilinha_aberto) {
+                        strBuilder.append('.');
+                        return buildFloat();
+                    }
+
+                } else if (Character.isLetter(linhaParaArray[x])) {
+                    // caso leia uma letra, so pode ser identificador ou palavra restrita
+                    if (!comentario_multilinha_aberto) {
+                        return continuarScan();
+                    }
+
+                } else if (linhaParaArray[x] == '\'') {
+                    // caso ele leia uma '
+                    coluna++;
+                    if (!comentario_multilinha_aberto) {
+                        strBuilder.append('\'');
+                        return readChar();
+                    }
+
+                } else if (linhaParaArray[x] == ';') {
+                    coluna++;
+                    if (!comentario_multilinha_aberto) {
+
+                        return new Token(";");
+                    }
+                } else if (linhaParaArray[x] == '(') {
+                    coluna++;
+                    if (!comentario_multilinha_aberto) {
+
+                        return new Token("(");
+                    }
+                } else if (linhaParaArray[x] == ')') {
+                    coluna++;
+                    if (!comentario_multilinha_aberto) {
+
+                        return new Token(")");
+                    }
+                } else if (linhaParaArray[x] == '{') {
+                    coluna++;
+                    if (!comentario_multilinha_aberto) {
+
+                        return new Token("{");
+                    }
+                } else if (linhaParaArray[x] == '}') {
+                    coluna++;
+                    if (!comentario_multilinha_aberto) {
+
+                        return new Token("}");
+                    }
+                } else if (linhaParaArray[x] == '+') {
+                    coluna++;
+                    if (!comentario_multilinha_aberto) {
+                        return new Token("+");
+                    }
+                } else if (linhaParaArray[x] == '-') {
+                    coluna++;
+                    if (!comentario_multilinha_aberto) {
+
+                        return new Token("-");
+                    }
+                } else if (linhaParaArray[x] == '*') {
+                    strBuilder.append('*');
+                    coluna++;
+                    if (comentario_multilinha_aberto) {
+                        // se o comentario multilinha estiver em aberto
+                        return checkFinishComentario();
+                    } else {
+                        return new Token(strBuilder.toString());
+                    }
+                } else if (linhaParaArray[x] == '/') {
+                    strBuilder.append(linhaParaArray[x]);
+                    coluna++;
+                    if (!comentario_multilinha_aberto) {
+                        return checarComentarioMultilinha();
+                    }
+                } else if (linhaParaArray[x] == '\t') {
+                    coluna += 4;
+                    if (!comentario_multilinha_aberto) {
+
+                        return new Token("\t");
+                    }
+                } else if (linhaParaArray[x] == ',') {
+                    coluna++;
+                    if (!comentario_multilinha_aberto) {
+                        return new Token(",");
+                    }
+                } else {
+                    if (!comentario_multilinha_aberto) {
+                        throw new CaractereInvalidoException();
+                    }
                 }
             }
+        }else{
+            return null;
         }
         return null;
+        
     }
 
     private Token continuarScan() throws CharMalFormadoException, FloatMalFormadoException {
@@ -224,9 +229,6 @@ public class Buffer {
     private Token readChar() throws CharMalFormadoException, FloatMalFormadoException {
         // apos ele ler um ', ele le os proximos dois caracteres
 
-        if (coluna + 2 >= linhaParaArray.length) {
-            throw new CharMalFormadoException();
-        }
         if (Character.isLetterOrDigit(linhaParaArray[coluna])) {
             // le a letra ou digito e vai para a proxima posicao
             strBuilder.append(linhaParaArray[coluna]);
@@ -240,7 +242,6 @@ public class Buffer {
         } else {
             throw new CharMalFormadoException();
         }
-
         coluna++;
         return new Token(strBuilder.toString());
     }

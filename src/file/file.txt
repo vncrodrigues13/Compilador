@@ -1,6 +1,12 @@
 int main()
 {
-    do
-        vinicius = 12;
-    while (vinicius <=1);
+    int file;
+
+    file = 12;
+
+    while (file < 13)
+        place = 12;
+    
+    if (file == 12)
+        place = 13;
 }
