@@ -22,8 +22,8 @@ public class TabelaDeSimbolos {
         }
     }
 
-    public void substituirValor(Simbolo simboloToChange){
-        if (!tabela.contains(simboloToChange)){
+    public void atualizarValor(Simbolo simboloToChange){
+        if (tabela.contains(simboloToChange)){
             //atualizamos o Simbolo que precisamos;
             tabela.set(tabela.indexOf(getSimbolo(simboloToChange.getToken())), simboloToChange);
         }
