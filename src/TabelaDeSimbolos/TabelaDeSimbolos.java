@@ -41,6 +41,17 @@ public class TabelaDeSimbolos {
         return null;
     }
 
+    public boolean existeSimbolo(Token lexemaTest, int escopo){
+        Iterator it = tabela.iterator();
+        while (it.hasNext()){
+            Simbolo simb = (Simbolo) it.next();
+            if (simb.getToken().equals(lexemaTest) && escopo == simb.getEscopo()){
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     public void clearEscopo(int valorEscopo){
         Iterator it = tabela.iterator();

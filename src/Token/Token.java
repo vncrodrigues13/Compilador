@@ -10,6 +10,9 @@ public class Token {
     public Token(String tokenLido) throws CharMalFormadoException, FloatMalFormadoException {
         this.tipo = classificarToken(tokenLido);
     }
+    public Token(int tipo){
+        this.tipo = tipo;
+    }
 
     public String getLexema() {
         return this.lexema;

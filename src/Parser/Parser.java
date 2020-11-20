@@ -17,7 +17,9 @@ public class Parser {
     private TabelaDeSimbolos tabelaDeSimbolos;
     private ArrayList<Token> listCalcExprArit;
     private Token tokenCalcExprArit, tokenCalcTermo;
+    private Stack<Token> pilhaExprArit;
     private Stack<Token> pilhaCalcTermo;
+    private Stack<Token> pilhaTermo;
     private int escopo;
 
     public Parser(ScannerCompilador scan) {
@@ -27,11 +29,13 @@ public class Parser {
         listCalcExprArit = new ArrayList<>();
         tokenCalcExprArit = null;
         pilhaCalcTermo = new Stack<>();
+        pilhaExprArit = new Stack<>();
+        pilhaTermo = new Stack<>();
         escopo = 0;
     }
 
     public void programa() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
-            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
+            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha, OpChareNaoChar {
         getNextToken();
         if (token_atual.getTipo() == 6) {
             getNextToken();
@@ -48,7 +52,7 @@ public class Parser {
     }
 
     public void bloco() throws IOException, EOFemComentarioMultilinha, FloatMalFormadoException,
-            ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException {
+            ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException, OpChareNaoChar {
         // “{“ {<decl_var>}* {<comando>}* '}'
         boolean createVar, createCommand;
         getNextToken();
@@ -97,7 +101,9 @@ public class Parser {
                 existeVirgula = false;
                 if (token_atual.getTipo() == 99) {
                     id = token_atual;
-                    tabelaDeSimbolos.addTabela(new Simbolo(id, escopo, tipo.getTipo()));
+                    if (varDisponivel(id)){ //verifica se a variavel n existe
+                        tabelaDeSimbolos.addTabela(new Simbolo(id, escopo, tipo.getTipo()));
+                    }
                     getNextToken();
                     if (token_atual.getTipo() == 25) {
                         existeVirgula = true;
@@ -113,7 +119,7 @@ public class Parser {
     }
 
     public void comando() throws IOException, EOFemComentarioMultilinha, FloatMalFormadoException,
-            ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException {
+            ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException, OpChareNaoChar {
         if (token_atual.getTipo() == 1) {
             // if '(' <exp_relacional> ')' '{' <comando> '}' else '{' <comando> '}'
             getNextToken();
@@ -143,7 +149,7 @@ public class Parser {
     }
 
     public void comando_basico() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
-            EOFemComentarioMultilinha, CaractereInvalidoException, CharMalFormadoException {
+            EOFemComentarioMultilinha, CaractereInvalidoException, CharMalFormadoException, OpChareNaoChar {
         // atribuicao ou bloco
         if (token_atual.getTipo() == 99) {
             // se for um identificador, ele vai formar uma atribuicao;
@@ -155,7 +161,7 @@ public class Parser {
     }
 
     public void iteracao() throws IOException, EOFemComentarioMultilinha, FloatMalFormadoException,
-            ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException {
+            ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException, OpChareNaoChar {
         // while "("<expr_relacional>")" <comando> | do <comando> while
         // "("<expr_relacional>")"";"
         if (token_atual.getTipo() == 3) {
@@ -199,16 +205,21 @@ public class Parser {
     }
 
     public void atribuicao() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
-            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
+            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha, OpChareNaoChar {
         // <id> "=" <expr_arit> ";"
         Token idToken, exprAritToken;
         if (token_atual.getTipo() == 99) {
             idToken = token_atual;
             getNextToken();
             if (token_atual.getTipo() == 16) {
+                getNextToken();
                 exprAritToken = expr_arit();
+                System.exit(0);
                 if (checarTipoAtribuicao(idToken, exprAritToken)) {
                     atribuirValor(idToken, exprAritToken);
+                }else{
+                    System.out.println("ATRIBUICAO INVALIDA");
+                    System.exit(0);
                 }
                 getNextToken();
                 if (token_atual.getTipo() == 24) {
@@ -219,8 +230,8 @@ public class Parser {
         }
     }
 
-    public Token expr_relacional() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
-            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
+    public void expr_relacional() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
+            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha, OpChareNaoChar {
         // <expr_arit> <op_relacional> <expr_arit>
         expr_arit();
         switch (token_atual.getTipo()) {
@@ -256,35 +267,27 @@ public class Parser {
                 break;
         }
         System.out.println("end expr relacional");
-        return calculoExpressaoArit();
     }
 
     public Token expr_arit() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
-            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
+            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha, OpChareNaoChar {
         // <expr_arit> "+" <termo> | <expr_arit> "-" <termo> | <termo>
-
-        listCalcExprArit.add(termo());
-
+        Token termoToken;
+        termoToken = termo();
+        pilhaExprArit.push(termoToken);
+        
         if (token_atual.getTipo() == 40 || token_atual.getTipo() == 41) {
             // se houver soma ou subtracao
-            listCalcExprArit.add(token_atual);
-            if (token_atual.getTipo() == 40) {
-                // caso seja uma soma
-                System.out.println("SOMA");
-            } else {
-                // caso seja uma subtracao
-                System.out.println("SUBTRACAO");
-            }
+            
+            pilhaExprArit.push(token_atual);
             getNextToken();
             expr_arit();
         }
-        System.out.println("end expr aritmetica");
-        return calculoExpressaoArit();
-
+        return new Token (definirTipoOperacao(pilhaExprArit));
     }
 
     public Token termo() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
-            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
+            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha, OpChareNaoChar {
         // <termo> "*" <fator> | <termo> '/' <fator> | <fator>
         // pego um fator e vejo se o proximo elemento tem uma '*' ou uma '/' se tiver eu
         // gero dou um loop com recursao
@@ -301,12 +304,11 @@ public class Parser {
             termo();
         }
         System.out.println("end termo");
-        return calculoTermo();
-
+        return new Token(definirTipoOperacao(pilhaCalcTermo));
     }
 
     public Token fator() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
-            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
+            CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha, OpChareNaoChar {
         // '(' <expr_arit> ')' | <id> | <float> | <inteiro> | <char>
         Token exprArit;
         if (token_atual.getTipo() == 20) {
@@ -321,7 +323,7 @@ public class Parser {
                 return null;
             }
         } else {
-            if (token_atual.getTipo() == 99){
+            if (token_atual.getTipo() == 99) {
                 Simbolo simbolToken = tabelaDeSimbolos.getSimbolo(token_atual);
                 return simbolToken.getValor();
             }
@@ -342,6 +344,12 @@ public class Parser {
             this.comentarioMultilinhaAberto = false;
             token_atual = scan.getNextToken();
         }
+    }
+
+    public boolean varDisponivel(Token id){
+        //se o simbolo não existir, então ele está disponivel -> true
+        //se o simbolo existir, então ele não está disponivel -> false
+        return !tabelaDeSimbolos.existeSimbolo(id,escopo);
     }
 
     private boolean checarTipo(Token primeiroToken, Token segundoToken) {
@@ -373,19 +381,28 @@ public class Parser {
 
     public boolean checarTipoAtribuicao(Token tokenIdentificador, Token valor){
         Simbolo simboloIdentificador = tabelaDeSimbolos.getSimbolo(tokenIdentificador);
-        if (simboloIdentificador != null){
-            if (valor.getTipo() == 7 || valor.getTipo() == 8{
-                return valor.getTipo() == tokenIdentificador.getTipo(); //se o identificador for do mesmo tipo do valor
-            }else if (valor.getTipo() == 6){
+        if (simboloIdentificador != null){  //se o simbolo existir
+            if (valor.getTipo() == 91){
+                 //se for um float ou um char, ele só pode ser atribuido a um símbolo do mesmo tipo
+
+                return simboloIdentificador.getTipo() == 7; //se o identificador for do mesmo tipo do valor
+
+            }else if (valor.getTipo() == 92){
+
+                return simboloIdentificador.getTipo() == 8;
+
+            }else if (valor.getTipo() == 90){
                 // se for um inteiro, ele pode ser atribuido a um Simbolo inteiro ou um Simbolo float
-                return valor.getTipo() == tokenIdentificador.getTipo() || //se o identificador for um inteiro
-                valor.getTipo() == tokenIdentificador.getTipo()+ 1; //se o identificador for um float
+                
+                return simboloIdentificador.getTipo() == 6 || 
+                simboloIdentificador.getTipo() == 7; //se o identificador for um float
+
             }else if (valor.getTipo() == 99){
                 // caso queira atribuir o valor de uma variavel a outra
+
                 Simbolo simboloValor = tabelaDeSimbolos.getSimbolo(valor);
                 return checarTipoAtribuicao(tokenIdentificador, simboloValor.getValor());
-            }else{
-                return false;
+
             }
         }
         return false;
@@ -396,140 +413,52 @@ public class Parser {
         tabelaDeSimbolos.atualizarValor(identf);
     }
 
-    public Token calculoExpressaoArit() throws CharMalFormadoException, FloatMalFormadoException {
-        Iterator iter = this.listCalcExprArit.iterator();
-        Token operandSign = null;
-        Token result = null;
-        while (iter.hasNext()) {
-            Token tk = (Token) iter.next();
-            switch (tk.getTipo()) {
-                case 6:
-                    // caso seja inteiro
-                    if (operandSign != null) {
-                        if (checarTipo(result, tk)) {
+    public Integer definirTipoOperacao(Stack<Token> pilha) throws OpChareNaoChar {
+        Integer tipo = null;
+        while (!pilha.empty()) {
+            Token topo = (Token)pilha.pop();
 
-                            if (tk.getTipo() == 6) {
-                                int resultInt = Integer.parseInt(result.getLexema());
-                                if (operandSign.getTipo() == 40) {
-                                    resultInt += Integer.parseInt(result.getLexema());
-                                } else {
-                                    resultInt -= Integer.parseInt(result.getLexema());
-                                }
-                                operandSign = null;
-                                result.setLexema(Integer.toString(resultInt));
-                            } else {
-                                Float resultFloat = Float.parseFloat(result.getLexema());
-                                if (operandSign.getTipo() == 40) {
-                                    resultFloat += Float.parseFloat(tk.getLexema());
-                                } else {
-                                    resultFloat -= Float.parseFloat(tk.getLexema());
-                                }
-                                operandSign = null;
-                                result.setLexema(Float.toString(resultFloat));
-                            }
-                        }
-                    } else {
-                        result = new Token(tk.getLexema());
-                    }
-                    break;
-                case 7:
-                    // caso seja float
-                    if (operandSign != null) {
-                        if (checarTipo(result, tk)) {
-                            if (result.getTipo() == 6) {
-                                // se o result for do tipo int, passa a ser do tipo float
-                                result.setTipo(7);
-                            }
-                            Float resultFloat = Float.parseFloat(result.getLexema());
-                            if (operandSign.getTipo() == 40) {
-                                resultFloat += Float.parseFloat(tk.getLexema());
-                            } else {
-                                resultFloat -= Float.parseFloat(tk.getLexema());
-                            }
-                            operandSign = null;
-                            result.setLexema(Float.toString(resultFloat));
-                        }
-                    } else {
-                        result = new Token(tk.getLexema());
-                    }
-                    break;
-                default:
-                    // caso seja um sinal
-                    operandSign = tk;
-                    break;
+            if (topo.getTipo() == 99) {
+                Simbolo topoSimbolo = tabelaDeSimbolos.getSimbolo(topo);
+                topo = topoSimbolo.getValor();
             }
-        }
-        return result;
-    }
+            
+            if (topo.getTipo() == 90) {
 
-    public Token calculoTermo() throws CharMalFormadoException, FloatMalFormadoException {
-        Token operand = null;
-        Token result = null;
-
-        while (pilhaCalcTermo.empty()) {
-            Token topoPilha = (Token) pilhaCalcTermo.pop();
-            if (result == null) {
-                result = new Token(topoPilha.getLexema());
-            } else {
-                if (topoPilha.getTipo() == 42 || topoPilha.getTipo() == 43) {
-                    // caso seja um sinal -> '/' ou '*'
-                    operand = topoPilha;
-                } else {
-                    if (checarTipo(result, topoPilha)) {
-                        // realizar operacoes
-                        if (topoPilha.getTipo() == 6) {
-                            if (result.getTipo() == 6) {
-                                // caso a pilha seja int
-                                int stackResult = Integer.parseInt(result.getLexema());
-                                if (operand.getTipo() == 42) {
-                                    // caso seja multiplicacao
-                                    stackResult *= Integer.parseInt(topoPilha.getLexema());
-                                } else {
-                                    // caso seja divisao
-                                    stackResult /= Integer.parseInt(topoPilha.getLexema());
-                                }
-                                result.setLexema(Integer.toString(stackResult));
-                            } else {
-                                // caso a pilha seja float
-                                float stackResult = Float.parseFloat(result.getLexema());
-                                if (operand.getTipo() == 42) {
-                                    // caso seja multiplicacao
-                                    stackResult *= Integer.parseInt(topoPilha.getLexema());
-                                } else {
-                                    // caso seja divisao
-                                    stackResult /= Integer.parseInt(topoPilha.getLexema());
-                                }
-                                result.setLexema(Float.toString(stackResult));
-                            }
-
-                        } else {
-                            result.setTipo(7);
-                            float stackResult = Float.parseFloat(result.getLexema());
-                            if (topoPilha.getTipo() == 6) {
-                                if (operand.getTipo() == 42) {
-                                    // caso seja '*'
-                                    stackResult *= Integer.parseInt(topoPilha.getLexema());
-                                } else {
-                                    // caso seja '/'
-                                    stackResult /= Integer.parseInt(topoPilha.getLexema());
-                                }
-                            } else {
-                                if (operand.getTipo() == 42) {
-                                    // caso seja '*'
-                                    stackResult *= Float.parseFloat(topoPilha.getLexema());
-                                } else {
-                                    // caso seja '/'
-                                    stackResult /= Float.parseFloat(topoPilha.getLexema());
-                                }
-                            }
-                            result.setLexema(Float.toString(stackResult));
-                        }
-                        operand = null;
-                    }
+                if (tipo == null) {
+                    tipo = 90;
+                }
+                if (tipo == 92) {
+                    throw new OpChareNaoChar();
+                }
+            } else if (topo.getTipo() == 91) {
+                if (tipo == null) {
+                    tipo = 91;
+                }else if (tipo == 92) {
+                    throw new OpChareNaoChar();
+                }else if (tipo == 90){
+                    tipo = 91;
+                }
+            } else if (topo.getTipo() == 92) {
+                // se for um char
+                if (tipo == null) {
+                    tipo = 92;
+                }else if (tipo != 92) {
+                    throw new OpChareNaoChar();
+                }
+            }else if (topo.getTipo() == 43){
+                // caso tenha uma divisao, return vai ser do tipo float
+                if (tipo == 90){
+                    tipo = 91;
                 }
             }
+            
         }
-        return result;
+        
+        System.out.println(tipo);
+        return tipo;
     }
+
+    
 
 }
