@@ -5,13 +5,13 @@ public class Simbolo {
     private int tipo;
     private Token token;
     private int escopo;
+    private Token valor;
 
     public Simbolo(Token token, int escopo, int tipo){
         this.token = token;
         this.escopo = escopo;
         this.tipo = tipo;
     }
-
     
     public Token getToken() {
         return this.token;
@@ -35,6 +35,15 @@ public class Simbolo {
 
     public void setTipo(int tipo){
         this.tipo = tipo;
+    }
+
+
+    public Token getValor(){
+        return this.valor;
+    }
+
+    public void setValor(Token valor){
+        this.valor = valor;
     }
 
     @Override

@@ -34,9 +34,9 @@ public class TabelaDeSimbolos {
         Iterator it = tabela.iterator();
 
         while (it.hasNext()){
-            Simbolo simbol = (Simbolo)it.next();
-            if (simbol.getToken().equals(token))
-                return simbol;
+            Simbolo simbolo = (Simbolo)it.next();
+            if (simbolo.getToken().equals(token))
+                return simbolo;
         }
         return null;
     }

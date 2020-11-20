@@ -5,10 +5,10 @@ import Exception.FloatMalFormadoException;
 import Buffer.Buffer;
 public class Token {
     private String lexema;
-    private int classificacao;
+    private int tipo;
 
     public Token(String tokenLido) throws CharMalFormadoException, FloatMalFormadoException {
-        this.classificacao = classificarToken(tokenLido);
+        this.tipo = classificarToken(tokenLido);
     }
 
     public String getLexema() {
@@ -19,12 +19,12 @@ public class Token {
         this.lexema = lexema;
     }
 
-    public int getValor() {
-        return this.classificacao;
+    public int getTipo() {
+        return this.tipo;
     }
 
-    public void setValor(int valor) {
-        this.classificacao = valor;
+    public void setTipo(int classificacao) {
+        this.tipo = classificacao;
     }
 
 
@@ -185,7 +185,7 @@ public class Token {
     public String toString() {
         return "{" +
             " lexema='" + lexema + "'" +
-            ", classificacao='" + classificacao + "'" +
+            ", classificacao='" + tipo + "'" +
             ",coluna="+Buffer.getColuna()+" }";
     }
 
@@ -194,7 +194,7 @@ public class Token {
         if (o instanceof Token){
             Token object = (Token)o;
             return this.lexema.equals(object.getLexema()) && 
-            this.getValor() == object.getValor();
+            this.getTipo() == object.getTipo();
         }
         return false;
     }
