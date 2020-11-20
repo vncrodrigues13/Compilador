@@ -27,6 +27,7 @@ public class Token {
         this.classificacao = valor;
     }
 
+
     public int classificarToken(String tokenLido) throws CharMalFormadoException, FloatMalFormadoException {
         if (tokenLido.equals("main")) {
             return 0;
@@ -186,6 +187,16 @@ public class Token {
             " lexema='" + lexema + "'" +
             ", classificacao='" + classificacao + "'" +
             ",coluna="+Buffer.getColuna()+" }";
+    }
+
+
+    @Override public boolean equals(Object o){
+        if (o instanceof Token){
+            Token object = (Token)o;
+            return this.lexema.equals(object.getLexema()) && 
+            this.getValor() == object.getValor();
+        }
+        return false;
     }
 
 

@@ -2,18 +2,21 @@ package Parser;
 
 import Token.Token;
 import java.io.IOException;
-
 import Exception.*;
 import Scanner.ScannerCompilador;
+import Simbolo.Simbolo;
+import TabelaDeSimbolos.TabelaDeSimbolos;
 
 public class Parser {
     private ScannerCompilador scan;
     private static Token token_atual;
     private boolean comentarioMultilinhaAberto;
+    private TabelaDeSimbolos tabelaDeSimbolos;
 
     public Parser(ScannerCompilador scan) {
         this.scan = scan;
         token_atual = null;
+        tabelaDeSimbolos = new TabelaDeSimbolos();
     }
 
     public void programa() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
@@ -184,8 +187,9 @@ public class Parser {
     public void atribuicao() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
             CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha {
         // <id> "=" <expr_arit> ";"
-
+        Token idToken, exprAritToken;
         if (token_atual.getValor() == 99) {
+            idToken = token_atual;
             getNextToken();
             if (token_atual.getValor() == 16) {
                 expr_arit();
@@ -321,6 +325,13 @@ public class Parser {
         if (token_atual.getValor() == 32){
             this.comentarioMultilinhaAberto = false;
             token_atual = scan.getNextToken();
+        }
+    }
+
+
+    private boolean checarTipo(Token primeiroToken, Token segundoToken){
+        if (tabelaDeSimbolos.getSimbolo(primeiroToken) == null){
+            // caso o primeiro simbolo seja null; 
         }
     }
 
