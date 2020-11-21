@@ -21,6 +21,8 @@ public class Parser {
     private Stack<Token> pilhaCalcTermo;
     private Stack<Token> pilhaTermo;
     private int escopo;
+    private Token resultExpr,resultTermo;
+    
 
     public Parser(ScannerCompilador scan) {
         this.scan = scan;
@@ -101,7 +103,7 @@ public class Parser {
                 existeVirgula = false;
                 if (token_atual.getTipo() == 99) {
                     id = token_atual;
-                    if (varDisponivel(id)){ //verifica se a variavel n existe
+                    if (varDisponivel(id)) { // verifica se a variavel n existe
                         tabelaDeSimbolos.addTabela(new Simbolo(id, escopo, tipo.getTipo()));
                     }
                     getNextToken();
@@ -214,10 +216,10 @@ public class Parser {
             if (token_atual.getTipo() == 16) {
                 getNextToken();
                 exprAritToken = expr_arit();
-                System.exit(0);
                 if (checarTipoAtribuicao(idToken, exprAritToken)) {
+                    System.out.printf("Atribuir %s a variável: %s\n",exprAritToken.getTipo(),idToken.getLexema());
                     atribuirValor(idToken, exprAritToken);
-                }else{
+                } else {
                     System.out.println("ATRIBUICAO INVALIDA");
                     System.exit(0);
                 }
@@ -272,18 +274,20 @@ public class Parser {
     public Token expr_arit() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
             CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha, OpChareNaoChar {
         // <expr_arit> "+" <termo> | <expr_arit> "-" <termo> | <termo>
-        Token termoToken;
-        termoToken = termo();
-        pilhaExprArit.push(termoToken);
-        
+
+        pilhaExprArit.push(termo());
+
         if (token_atual.getTipo() == 40 || token_atual.getTipo() == 41) {
             // se houver soma ou subtracao
-            
             pilhaExprArit.push(token_atual);
             getNextToken();
             expr_arit();
         }
-        return new Token (definirTipoOperacao(pilhaExprArit));
+        if (!pilhaExprArit.empty()) {
+            resultExpr = definirTipoOperacao(pilhaExprArit);
+        }
+        return resultExpr;
+
     }
 
     public Token termo() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
@@ -304,7 +308,10 @@ public class Parser {
             termo();
         }
         System.out.println("end termo");
-        return new Token(definirTipoOperacao(pilhaCalcTermo));
+        if (!pilhaCalcTermo.empty()){
+            resultTermo = definirTipoOperacao(pilhaCalcTermo);
+        }
+        return resultTermo;
     }
 
     public Token fator() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
@@ -346,10 +353,10 @@ public class Parser {
         }
     }
 
-    public boolean varDisponivel(Token id){
-        //se o simbolo não existir, então ele está disponivel -> true
-        //se o simbolo existir, então ele não está disponivel -> false
-        return !tabelaDeSimbolos.existeSimbolo(id,escopo);
+    public boolean varDisponivel(Token id) {
+        // se o simbolo não existir, então ele está disponivel -> true
+        // se o simbolo existir, então ele não está disponivel -> false
+        return !tabelaDeSimbolos.existeSimbolo(id, escopo);
     }
 
     private boolean checarTipo(Token primeiroToken, Token segundoToken) {
@@ -379,25 +386,26 @@ public class Parser {
         }
     }
 
-    public boolean checarTipoAtribuicao(Token tokenIdentificador, Token valor){
+    public boolean checarTipoAtribuicao(Token tokenIdentificador, Token valor) {
         Simbolo simboloIdentificador = tabelaDeSimbolos.getSimbolo(tokenIdentificador);
-        if (simboloIdentificador != null){  //se o simbolo existir
-            if (valor.getTipo() == 91){
-                 //se for um float ou um char, ele só pode ser atribuido a um símbolo do mesmo tipo
+        if (simboloIdentificador != null) { // se o simbolo existir
+            if (valor.getTipo() == 91) {
+                // se for um float ou um char, ele só pode ser atribuido a um símbolo do mesmo
+                // tipo
 
-                return simboloIdentificador.getTipo() == 7; //se o identificador for do mesmo tipo do valor
+                return simboloIdentificador.getTipo() == 7; // se o identificador for do mesmo tipo do valor
 
-            }else if (valor.getTipo() == 92){
+            } else if (valor.getTipo() == 92) {
 
                 return simboloIdentificador.getTipo() == 8;
 
-            }else if (valor.getTipo() == 90){
-                // se for um inteiro, ele pode ser atribuido a um Simbolo inteiro ou um Simbolo float
-                
-                return simboloIdentificador.getTipo() == 6 || 
-                simboloIdentificador.getTipo() == 7; //se o identificador for um float
+            } else if (valor.getTipo() == 90) {
+                // se for um inteiro, ele pode ser atribuido a um Simbolo inteiro ou um Simbolo
+                // float
+                return simboloIdentificador.getTipo() == 6 || simboloIdentificador.getTipo() == 7; // se o identificador
+                                                                                                   // for um float
 
-            }else if (valor.getTipo() == 99){
+            } else if (valor.getTipo() == 99) {
                 // caso queira atribuir o valor de uma variavel a outra
 
                 Simbolo simboloValor = tabelaDeSimbolos.getSimbolo(valor);
@@ -413,16 +421,18 @@ public class Parser {
         tabelaDeSimbolos.atualizarValor(identf);
     }
 
-    public Integer definirTipoOperacao(Stack<Token> pilha) throws OpChareNaoChar {
+    public Token definirTipoOperacao(Stack<Token> pilha) throws OpChareNaoChar {
+        Stack pilhaAux = pilha;
         Integer tipo = null;
+
         while (!pilha.empty()) {
-            Token topo = (Token)pilha.pop();
+            Token topo = pilha.pop();
 
             if (topo.getTipo() == 99) {
                 Simbolo topoSimbolo = tabelaDeSimbolos.getSimbolo(topo);
                 topo = topoSimbolo.getValor();
             }
-            
+
             if (topo.getTipo() == 90) {
 
                 if (tipo == null) {
@@ -434,31 +444,28 @@ public class Parser {
             } else if (topo.getTipo() == 91) {
                 if (tipo == null) {
                     tipo = 91;
-                }else if (tipo == 92) {
+                } else if (tipo == 92) {
                     throw new OpChareNaoChar();
-                }else if (tipo == 90){
+                } else if (tipo == 90) {
                     tipo = 91;
                 }
             } else if (topo.getTipo() == 92) {
                 // se for um char
                 if (tipo == null) {
                     tipo = 92;
-                }else if (tipo != 92) {
+                } else if (tipo != 92) {
                     throw new OpChareNaoChar();
                 }
-            }else if (topo.getTipo() == 43){
+            } else if (topo.getTipo() == 43) {
                 // caso tenha uma divisao, return vai ser do tipo float
-                if (tipo == 90){
+                if (tipo == 90) {
                     tipo = 91;
                 }
             }
-            
-        }
-        
-        System.out.println(tipo);
-        return tipo;
-    }
 
-    
+        }
+        return new Token(tipo);
+
+    }
 
 }

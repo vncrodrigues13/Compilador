@@ -1,8 +1,7 @@
 int main()
 {
-    float file;
+    char vintage; 
 
-    file = 8+1;
-    
+    vintage = 5.85 + 20;
 
 }

@@ -281,7 +281,7 @@ public class Buffer {
             if (Character.isDigit(linhaParaArray[x])) {
                 cont++;
                 strBuilder.append(linhaParaArray[x]);
-            } else if (Character.isLetter(this.linhaParaArray[x])) {
+            } else if (!Character.isDigit(this.linhaParaArray[x])) {
                 // se houver letra no meio do valor float, retorna float mal formado
                 return new Token(strBuilder.toString());
             } else if (!Character.isDigit(linhaParaArray[x]) && cont == 0) {

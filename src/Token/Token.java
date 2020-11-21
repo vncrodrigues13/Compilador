@@ -3,6 +3,7 @@ package Token;
 import Exception.CharMalFormadoException;
 import Exception.FloatMalFormadoException;
 import Buffer.Buffer;
+
 public class Token {
     private String lexema;
     private int tipo;
@@ -10,7 +11,8 @@ public class Token {
     public Token(String tokenLido) throws CharMalFormadoException, FloatMalFormadoException {
         this.tipo = classificarToken(tokenLido);
     }
-    public Token(int tipo){
+
+    public Token(int tipo) {
         this.tipo = tipo;
     }
 
@@ -29,7 +31,6 @@ public class Token {
     public void setTipo(int classificacao) {
         this.tipo = classificacao;
     }
-
 
     public int classificarToken(String tokenLido) throws CharMalFormadoException, FloatMalFormadoException {
         if (tokenLido.equals("main")) {
@@ -62,10 +63,10 @@ public class Token {
             return 14;
         } else if (tokenLido.equals("<=")) {
             return 15;
-        }else if (tokenLido.equals("=")){
+        } else if (tokenLido.equals("=")) {
             return 16;
         } else if (tokenLido.equals("(")) {
-             return 20;
+            return 20;
         } else if (tokenLido.equals(")")) {
             return 21;
         } else if (tokenLido.equals("{")) {
@@ -76,41 +77,43 @@ public class Token {
             return 24;
         } else if (tokenLido.equals(",")) {
             return 25;
-        }else if (tokenLido.equals("//")) {
+        } else if (tokenLido.equals("//")) {
             return 30;
         } else if (tokenLido.equals("/*")) {
             return 31;
         } else if (tokenLido.equals("*/")) {
             return 32;
-        }else if (tokenLido.equals("+")){
+        } else if (tokenLido.equals("+")) {
             return 40;
-        }else if (tokenLido.equals("-")){
+        } else if (tokenLido.equals("-")) {
             return 41;
-        }else if (tokenLido.equals("*")){
+        } else if (tokenLido.equals("*")) {
             return 42;
-        }else if (tokenLido.equals("/")){
+        } else if (tokenLido.equals("/")) {
             return 43;
-        }else if (tokenLido.equals("\t")){
+        } else if (tokenLido.equals("\t")) {
             return 150;
-        }else {
-            // preciso identificar se eh um caractere, um inteiro, um float ou um identificador
-            if (validarInt(tokenLido)){
+        } else {
+            // preciso identificar se eh um caractere, um inteiro, um float ou um
+            // identificador
+            if (validarInt(tokenLido)) {
                 this.lexema = tokenLido;
                 return 90;
-            }else if (validarFloat(tokenLido)){
+            } else if (validarFloat(tokenLido)) {
                 this.lexema = tokenLido;
                 return 91;
-            }else if (validarChar(tokenLido)){
+            } else if (validarChar(tokenLido)) {
                 this.lexema = tokenLido;
                 return 92;
-            }else if (validarIdentificador(tokenLido)){
+            } else if (validarIdentificador(tokenLido)) {
                 this.lexema = tokenLido;
                 return 99;
-            }else{
+            } else {
                 return 101;
             }
         }
     }
+
     private boolean validarIdentificador(String element) {
         char[] toCharArrayElement = element.toCharArray();
 
@@ -129,17 +132,17 @@ public class Token {
 
     private boolean validarChar(String element) throws CharMalFormadoException {
         // ele verifica a construcao do char se eh um: ' -> element -> '
-        if (element.charAt(0) == '\'' && Character.isLetterOrDigit(element.charAt(1)) && element.charAt(2) == '\''){
+        if (element.charAt(0) == '\'' && Character.isLetterOrDigit(element.charAt(1)) && element.charAt(2) == '\'') {
             return true;
         } else {
             return false;
         }
     }
 
-    private boolean validarInt(String element){
+    private boolean validarInt(String element) {
         int contador = 0;
-        for (int x = 0; x < element.length(); x++){
-            if (!Character.isDigit(element.charAt(x))){
+        for (int x = 0; x < element.length(); x++) {
+            if (!Character.isDigit(element.charAt(x))) {
                 return false;
             }
             if (Character.isDigit(element.charAt(x)))
@@ -148,59 +151,53 @@ public class Token {
         return contador > 0;
     }
 
-    private boolean validarFloat(String element) throws FloatMalFormadoException{
+    private boolean validarFloat(String element) throws FloatMalFormadoException {
         boolean existePonto = false;
         boolean valido = false;
         int posicaodoPonto = 0;
         int x;
-        for (x = 0; x < element.length(); x++){
-            if (!Character.isDigit(element.charAt(x)) && element.charAt(x) != '.'){
-                // se conter um elemento que nao seja um numero, ou um ponto, retorna falso
+        for (x = 0; x < element.length(); x++) {
+            if (!Character.isDigit(element.charAt(x)) && element.charAt(x) != '.') {
+                // se conter um elemento que nao seja um numero ou ponto, retorna falso
                 return false;
             }
-            if (element.charAt(x) == '.'){
+            if (element.charAt(x) == '.') {
                 posicaodoPonto = x;
                 existePonto = true;
                 break;
             }
-            if (existePonto && posicaodoPonto < element.length()){
-                for (; x < element.length(); x++){
-                    if (!Character.isDigit(element.charAt(x)) && element.charAt(x) != '.'){
-                        // se conter um elemento que nao seja um numero, ou um ponto, retorna falso
-                        return false;
-                    }
-                    if (Character.isDigit(element.charAt(x))){
-                        valido = true;
-                    }
+
+        }
+        if (existePonto && posicaodoPonto < element.length()) {
+            for (; x < element.length(); x++) {
+                if (!Character.isDigit(element.charAt(x)) && element.charAt(x) != '.') {
+                    // se conter um elemento que nao seja um numero, ou um ponto, retorna falso
+                    return false;
                 }
-            }else{
-                // caso nao exista ponto ou dps do ponto nao exista nenhum elemento
-                throw new FloatMalFormadoException();
+                if (Character.isDigit(element.charAt(x))) {
+                    valido = true;
+                }
             }
-            
-            
+        } else {
+            // caso nao exista ponto ou dps do ponto nao exista nenhum elemento
+            throw new FloatMalFormadoException();
         }
         return valido;
     }
 
-
     @Override
     public String toString() {
-        return "{" +
-            " lexema='" + lexema + "'" +
-            ", classificacao='" + tipo + "'" +
-            ",coluna="+Buffer.getColuna()+" }";
+        return "{" + " lexema='" + lexema + "'" + ", classificacao='" + tipo + "'" + ",coluna=" + Buffer.getColuna()
+                + " }";
     }
 
-
-    @Override public boolean equals(Object o){
-        if (o instanceof Token){
-            Token object = (Token)o;
-            return this.lexema.equals(object.getLexema()) && 
-            this.getTipo() == object.getTipo();
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Token) {
+            Token object = (Token) o;
+            return this.lexema.equals(object.getLexema()) && this.getTipo() == object.getTipo();
         }
         return false;
     }
-
 
 }
