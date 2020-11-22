@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Stack;
 
+import Buffer.Buffer;
+
 public class Parser {
     private ScannerCompilador scan;
     private static Token token_atual;
@@ -46,6 +48,7 @@ public class Parser {
                 if (token_atual.getTipo() == 20) {
                     getNextToken();
                     if (token_atual.getTipo() == 21) {
+                        getNextToken();
                         bloco();
                     }
                 }
@@ -57,7 +60,6 @@ public class Parser {
             ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException, OpChareNaoChar {
         // “{“ {<decl_var>}* {<comando>}* '}'
         boolean createVar, createCommand;
-        getNextToken();
         if (token_atual.getTipo() == 22) {
             do {
                 createVar = false;
@@ -105,6 +107,9 @@ public class Parser {
                     id = token_atual;
                     if (varDisponivel(id)) { // verifica se a variavel n existe
                         tabelaDeSimbolos.addTabela(new Simbolo(id, escopo, tipo.getTipo()));
+                    }else{
+                        System.out.printf("ERRO na linha: %d e na coluna: %d. Variavel \'%s\' ja existente",ScannerCompilador.getLinha()+1,Buffer.getColuna()+1,id.getLexema());
+                        System.exit(0);
                     }
                     getNextToken();
                     if (token_atual.getTipo() == 25) {
@@ -115,7 +120,6 @@ public class Parser {
             } while (existeVirgula);
 
             if (token_atual.getTipo() == 24) {
-                System.out.println("End declarar var");
             }
         }
     }
@@ -123,20 +127,26 @@ public class Parser {
     public void comando() throws IOException, EOFemComentarioMultilinha, FloatMalFormadoException,
             ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException, OpChareNaoChar {
         if (token_atual.getTipo() == 1) {
-            // if '(' <exp_relacional> ')' '{' <comando> '}' else '{' <comando> '}'
+            escopo++;
+            // if "("<expr_relacional>")" <comando> {else <comando>}?
             getNextToken();
             if (token_atual.getTipo() == 20) {
+                //abre parenteses
+                getNextToken();
                 expr_relacional();
                 if (token_atual.getTipo() == 21) {
                     // fecha parenteses
                     getNextToken();
                     comando();
-                    System.out.println("end if");
+                    tabelaDeSimbolos.clearEscopo(escopo);
+                    escopo--;
                     if (token_atual.getTipo() == 2) {
                         // else
+                        escopo++;
                         getNextToken();
                         comando();
-                        System.out.println("end else");
+                        tabelaDeSimbolos.clearEscopo(escopo);
+                        escopo--;
                     }
                 }
             }
@@ -156,6 +166,7 @@ public class Parser {
         if (token_atual.getTipo() == 99) {
             // se for um identificador, ele vai formar uma atribuicao;
             atribuicao();
+            
         } else if (token_atual.getTipo() == 22) {
             // se houver uma chave, vai ser um bloco
             bloco();
@@ -167,6 +178,7 @@ public class Parser {
         // while "("<expr_relacional>")" <comando> | do <comando> while
         // "("<expr_relacional>")"";"
         if (token_atual.getTipo() == 3) {
+            escopo++;
             // 'while'
             getNextToken();
             if (token_atual.getTipo() == 20) {
@@ -179,15 +191,16 @@ public class Parser {
                     getNextToken();
                     comando();
                     // acabou o loop 'while'
-                    System.out.println("End iteração while");
+                    tabelaDeSimbolos.clearEscopo(escopo);
+                    escopo--;
                 }
             }
         } else if (token_atual.getTipo() == 4) {
+            escopo++;
             getNextToken();
             comando();
             getNextToken();
             if (token_atual.getTipo() == 3) {
-                System.out.println("while");
                 getNextToken();
                 if (token_atual.getTipo() == 20) {
                     getNextToken();
@@ -197,7 +210,8 @@ public class Parser {
                         getNextToken();
                         if (token_atual.getTipo() == 24) {
                             // acabou o loop. 'do while'
-                            System.out.println("End iteração do while");
+                            tabelaDeSimbolos.clearEscopo(escopo);
+                            escopo--;
                         }
                     }
                 }
@@ -217,15 +231,12 @@ public class Parser {
                 getNextToken();
                 exprAritToken = expr_arit();
                 if (checarTipoAtribuicao(idToken, exprAritToken)) {
-                    System.out.printf("Atribuir %s a variável: %s\n",exprAritToken.getTipo(),idToken.getLexema());
                     atribuirValor(idToken, exprAritToken);
                 } else {
-                    System.out.println("ATRIBUICAO INVALIDA");
+                    System.out.printf("ATRIBUICAO INVALIDA na linha: %d e na coluna: %d \n",ScannerCompilador.getLinha()+1,Buffer.getColuna()+1);
                     System.exit(0);
                 }
-                getNextToken();
                 if (token_atual.getTipo() == 24) {
-                    System.out.println("end atribuicao");
                     // finalizar atribuicao
                 }
             }
@@ -235,40 +246,49 @@ public class Parser {
     public void expr_relacional() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
             CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha, OpChareNaoChar {
         // <expr_arit> <op_relacional> <expr_arit>
-        expr_arit();
+        Token primeiroFator,segundoFator;
+        primeiroFator = expr_arit();
+        segundoFator = null;
+        
         switch (token_atual.getTipo()) {
             case 10:
                 // igual
                 getNextToken();
-                expr_arit();
+                segundoFator = expr_arit();
                 break;
             case 11:
                 // diferente
                 getNextToken();
-                expr_arit();
+                segundoFator = expr_arit();
                 break;
             case 12:
                 // maior que
                 getNextToken();
-                expr_arit();
+                segundoFator = expr_arit();
                 break;
             case 13:
                 // maior igual a
                 getNextToken();
-                expr_arit();
+                segundoFator = expr_arit();
                 break;
             case 14:
                 // menor que
                 getNextToken();
-                expr_arit();
+                segundoFator = expr_arit();
                 break;
             case 15:
                 // menor igual a
                 getNextToken();
-                expr_arit();
+                segundoFator = expr_arit();
                 break;
         }
-        System.out.println("end expr relacional");
+        if (checarTipo(primeiroFator,segundoFator)){
+            // se for compatível...
+        }else{
+            System.out.printf("ERRO na linha: %d e na coluna: %d. Comparacao com tipos incompativeis.",ScannerCompilador.getLinha()+1,Buffer.getColuna()+1);
+            System.exit(0);
+        }
+
     }
 
     public Token expr_arit() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
@@ -283,9 +303,11 @@ public class Parser {
             getNextToken();
             expr_arit();
         }
+        
         if (!pilhaExprArit.empty()) {
             resultExpr = definirTipoOperacao(pilhaExprArit);
         }
+        
         return resultExpr;
 
     }
@@ -307,7 +329,6 @@ public class Parser {
             getNextToken();
             termo();
         }
-        System.out.println("end termo");
         if (!pilhaCalcTermo.empty()){
             resultTermo = definirTipoOperacao(pilhaCalcTermo);
         }
@@ -332,6 +353,10 @@ public class Parser {
         } else {
             if (token_atual.getTipo() == 99) {
                 Simbolo simbolToken = tabelaDeSimbolos.getSimbolo(token_atual);
+                if (simbolToken == null){
+                    System.out.printf("SIMBOLO INEXISTENTE, na linha: %d e na coluna: %d\n",ScannerCompilador.getLinha()+1,Buffer.getColuna()+1);
+                    System.exit(0);
+                }
                 return simbolToken.getValor();
             }
             return token_atual;
@@ -365,24 +390,40 @@ public class Parser {
             // identificadores
             Simbolo primeiroSimbolo = tabelaDeSimbolos.getSimbolo(primeiroToken);
             Simbolo segundoSimbolo = tabelaDeSimbolos.getSimbolo(segundoToken);
-            return primeiroSimbolo.getTipo() == segundoSimbolo.getTipo();
+            
+            if (primeiroSimbolo.getTipo() == 6 || primeiroSimbolo.getTipo() == 7){
+                return segundoSimbolo.getTipo() == 6 || segundoSimbolo.getTipo() == 7;
+            }else{
+                return segundoSimbolo.getTipo() == 8;
+            }
         } else if (primeiroToken.getTipo() == 99 && segundoToken.getTipo() != 99) {
 
             // verifica se o tipo do identificador e o tipo do Token são iguais
-
             Simbolo primeiroSimbolo = tabelaDeSimbolos.getSimbolo(primeiroToken);
-
-            return primeiroSimbolo.getTipo() == segundoToken.getTipo();
+            
+            if (segundoToken.getTipo() == 90 || segundoToken.getTipo() == 91){
+                return primeiroSimbolo.getTipo() == 6 ||  primeiroSimbolo.getTipo() == 7;
+            }else{
+                return primeiroSimbolo.getTipo() == 8;
+            }
 
         } else if (primeiroToken.getTipo() != 99 && segundoToken.getTipo() == 99) {
             // verifica se o tipo do identificador e o tipo do Token são iguais
-            Simbolo segundSimbolo = tabelaDeSimbolos.getSimbolo(segundoToken);
-            return primeiroToken.getTipo() == segundSimbolo.getTipo();
+            Simbolo simbolo = tabelaDeSimbolos.getSimbolo(segundoToken);
+            if (primeiroToken.getTipo() == 90 || primeiroToken.getTipo() == 91){
+                return simbolo.getTipo() == 6 || simbolo.getTipo() == 7;
+            }else{
+                return simbolo.getTipo() == 8;
+            }
         } else {
             // caso nenhum dos dois tokens sejam identificadores
 
-            return primeiroToken.getTipo() == segundoToken.getTipo();
-
+            if (primeiroToken.getTipo() == 90 || primeiroToken.getTipo() == 91){
+                return segundoToken.getTipo() == 90 || segundoToken.getTipo() == 91;
+            }else{
+                // se n for um int ou float só pode ser char
+                return segundoToken.getTipo() == 92;
+            }
         }
     }
 
@@ -410,21 +451,22 @@ public class Parser {
 
                 Simbolo simboloValor = tabelaDeSimbolos.getSimbolo(valor);
                 return checarTipoAtribuicao(tokenIdentificador, simboloValor.getValor());
-
             }
+        }else{
+            System.out.printf("SIMBOLO INEXISTENTE na linha: %d e coluna %d",ScannerCompilador.getLinha()+1,Buffer.getColuna()+1);
+            System.exit(0);
         }
         return false;
     }
 
     public void atribuirValor(Token tokenIdentificador, Token valor) {
         Simbolo identf = tabelaDeSimbolos.getSimbolo(tokenIdentificador);
+        identf.setValor(valor);
         tabelaDeSimbolos.atualizarValor(identf);
     }
 
     public Token definirTipoOperacao(Stack<Token> pilha) throws OpChareNaoChar {
-        Stack pilhaAux = pilha;
         Integer tipo = null;
-
         while (!pilha.empty()) {
             Token topo = pilha.pop();
 
@@ -462,7 +504,6 @@ public class Parser {
                     tipo = 91;
                 }
             }
-
         }
         return new Token(tipo);
 

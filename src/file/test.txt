@@ -1,7 +1,20 @@
 int main()
 {
-    char vintage; 
+    int volume; 
+    float amp;
 
-    vintage = 5.85 + 20;
+    volume = 20; 
+    amp = 21.5;
+    if (volume >= amp)
+    {
+        char animal; 
+        animal = 'c';
+        if (volume == volume)
+        {
+            volume = 20;
+            amp = 10;
+        }
+
+    }
 
 }
