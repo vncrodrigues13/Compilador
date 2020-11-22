@@ -36,60 +36,88 @@ public class Token {
         if (tokenLido.equals("main")) {
             return 0;
         } else if (tokenLido.equals("if")) {
+            this.lexema = "if";
             return 1;
         } else if (tokenLido.equals("else")) {
+            this.lexema = "else";
             return 2;
         } else if (tokenLido.equals("while")) {
+            this.lexema = "while";
             return 3;
         } else if (tokenLido.equals("do")) {
+            this.lexema = "do";
             return 4;
         } else if (tokenLido.equals("for")) {
+            this.lexema = "for";
             return 5;
         } else if (tokenLido.equals("int")) {
+            this.lexema = "int";
             return 6;
         } else if (tokenLido.equals("float")) {
+            this.lexema = "float";
             return 7;
         } else if (tokenLido.equals("char")) {
+            this.lexema = "char";
             return 8;
         } else if (tokenLido.equals("==")) {
+            this.lexema = "==";
             return 10;
         } else if (tokenLido.equals("!=")) {
+            this.lexema = "!=";
             return 11;
         } else if (tokenLido.equals(">")) {
+            this.lexema = ">";
             return 12;
         } else if (tokenLido.equals(">=")) {
+            this.lexema = ">=";
             return 13;
         } else if (tokenLido.equals("<")) {
+            this.lexema = "<";
             return 14;
         } else if (tokenLido.equals("<=")) {
+            this.lexema = "<=";
             return 15;
         } else if (tokenLido.equals("=")) {
+            this.lexema = "=";
             return 16;
         } else if (tokenLido.equals("(")) {
+            this.lexema = "(";
             return 20;
         } else if (tokenLido.equals(")")) {
+            this.lexema = ")";
             return 21;
         } else if (tokenLido.equals("{")) {
+            this.lexema = "{";
             return 22;
         } else if (tokenLido.equals("}")) {
+            this.lexema = "}";
             return 23;
         } else if (tokenLido.equals(";")) {
+            this.lexema = ";";
             return 24;
         } else if (tokenLido.equals(",")) {
+            this.lexema = ",";
             return 25;
         } else if (tokenLido.equals("//")) {
+            this.lexema = "//";
             return 30;
         } else if (tokenLido.equals("/*")) {
+            this.lexema = "/*";
             return 31;
         } else if (tokenLido.equals("*/")) {
+            this.lexema = "*/";
             return 32;
         } else if (tokenLido.equals("+")) {
+            this.lexema = "+";
             return 40;
         } else if (tokenLido.equals("-")) {
+            this.lexema = "-";
             return 41;
         } else if (tokenLido.equals("*")) {
+            this.lexema = "*";
             return 42;
         } else if (tokenLido.equals("/")) {
+            this.lexema = "/";
             return 43;
         } else if (tokenLido.equals("\t")) {
             return 150;

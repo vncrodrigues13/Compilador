@@ -4,17 +4,6 @@ int main()
     float amp;
 
     volume = 20; 
-    amp = 21.5;
-    if (volume >= amp)
-    {
-        char animal; 
-        animal = 'c';
-        if (volume == volume)
-        {
-            volume = 20;
-            amp = 10;
-        }
-
-    }
+    amp = volume; 
 
 }
