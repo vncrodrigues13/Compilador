@@ -26,6 +26,7 @@ public class Parser {
     private int contadorRegistradorTemporario;
     private Token resultExpr, resultTermo;
     private Stack<Token> saveOperation;
+    private int labelsQuantidade;
 
     public Parser(ScannerCompilador scan) {
         this.scan = scan;
@@ -37,6 +38,7 @@ public class Parser {
         escopo = 0;
         contadorRegistradorTemporario = 0;
         saveOperation = new Stack<>();
+        labelsQuantidade = 0;
     }
 
     public void programa() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
@@ -49,6 +51,9 @@ public class Parser {
                 if (token_atual.getTipo() == 20) {
                     getNextToken();
                     if (token_atual.getTipo() == 21) {
+
+                        System.out.printf("label%d: \n",labelsQuantidade);
+                        labelsQuantidade++;
                         getNextToken();
                         bloco();
                     }
@@ -110,7 +115,7 @@ public class Parser {
                         tabelaDeSimbolos.addTabela(new Simbolo(id, escopo, tipo.getTipo()));
                     } else {
                         System.out.printf(
-                                "ERRO na linha: %d e na coluna: %d. Variavel \'%s\' ja existente. Ultimo Token lido foi \'%s\'",
+                                "\tERRO na linha: %d e na coluna: %d. Variavel \'%s\' ja existente. Ultimo Token lido foi \'%s\'",
                                 ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, id.getLexema(),
                                 token_atual.getLexema());
                         System.exit(0);
@@ -122,7 +127,7 @@ public class Parser {
                     }
                 } else {
                     System.out.printf(
-                            "ERRO: Nome de variavel invalido. Na linha: %d, na coluna: %d. O ultimo Token lido foi: %s\n",
+                            "\tERRO: Nome de variavel invalido. Na linha: %d, na coluna: %d. O ultimo Token lido foi: %s\n",
                             ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
                     System.exit(0);
                 }
@@ -136,7 +141,7 @@ public class Parser {
     public void comando() throws IOException, EOFemComentarioMultilinha, FloatMalFormadoException,
             ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException, OpChareNaoChar {
         if (token_atual.getTipo() == 1) {
-            
+
             escopo++;
             // if "("<expr_relacional>")" <comando> {else <comando>}?
             getNextToken();
@@ -148,16 +153,20 @@ public class Parser {
                     // fecha parenteses
                     getNextToken();
                     comando();
-
                     tabelaDeSimbolos.clearEscopo(escopo);
                     escopo--;
                     if (token_atual.getTipo() == 2) {
                         // else
+                        System.out.printf("labels%d\n",labelsQuantidade);
+                        labelsQuantidade++;
                         escopo++;
                         getNextToken();
                         comando();
                         tabelaDeSimbolos.clearEscopo(escopo);
                         escopo--;
+                    }else{
+                        System.out.printf("label%d:\n",labelsQuantidade);
+                        labelsQuantidade++;
                     }
                 }
             }
@@ -188,7 +197,11 @@ public class Parser {
             ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException, OpChareNaoChar {
         // while "("<expr_relacional>")" <comando> | do <comando> while
         // "("<expr_relacional>")"";"
+        
         if (token_atual.getTipo() == 3) {
+            int labelIteracao = labelsQuantidade;
+            System.out.printf("label%d:\n",labelsQuantidade);
+            labelsQuantidade++;
             escopo++;
             // 'while'
             getNextToken();
@@ -201,12 +214,17 @@ public class Parser {
                     // fecha parenteses
                     getNextToken();
                     comando();
+                    System.out.printf("\tgoto label%d\n",labelIteracao);
+                    System.out.printf("label%d: \n",labelsQuantidade);
                     // acabou o loop 'while'
                     tabelaDeSimbolos.clearEscopo(escopo);
                     escopo--;
                 }
             }
         } else if (token_atual.getTipo() == 4) {
+            int labelIteracao = labelsQuantidade;
+            System.out.printf("label%d\n",labelsQuantidade);
+            labelsQuantidade++;
             escopo++;
             getNextToken();
             comando();
@@ -216,11 +234,13 @@ public class Parser {
                 if (token_atual.getTipo() == 20) {
                     getNextToken();
                     expr_relacional();
-                    getNextToken();
                     if (token_atual.getTipo() == 21) {
                         getNextToken();
+                        
                         if (token_atual.getTipo() == 24) {
                             // acabou o loop. 'do while'
+                            System.out.printf("\tgoto label%d\n",labelIteracao);
+                            System.out.printf("label%d: \n",labelsQuantidade);
                             tabelaDeSimbolos.clearEscopo(escopo);
                             escopo--;
                         }
@@ -243,13 +263,13 @@ public class Parser {
                 exprAritToken = expr_arit();
                 if (checarTipoAtribuicao(idToken, exprAritToken)) {
                     prepararString(saveOperation);
-                    System.out.printf("%s = _t%d\n",idToken.getLexema(),contadorRegistradorTemporario-1);
-                    exprAritToken.setLexema("_t"+(contadorRegistradorTemporario-1));
+                    System.out.printf("\t%s = _t%d\n", idToken.getLexema(), contadorRegistradorTemporario - 1);
+                    exprAritToken.setLexema("_t" + (contadorRegistradorTemporario - 1));
                     atribuirValor(idToken, exprAritToken);
-                    
+
                 } else {
                     System.out.printf(
-                            "ATRIBUICAO INVALIDA na linha: %d e na coluna: %d. O ultimo Token lido foi: \'%s\'\n",
+                            "\tATRIBUICAO INVALIDA na linha: %d e na coluna: %d. O ultimo Token lido foi: \'%s\'\n",
                             ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
                     System.exit(0);
                 }
@@ -264,12 +284,13 @@ public class Parser {
             CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha, OpChareNaoChar {
         // <expr_arit> <op_relacional> <expr_arit>
         Stack<Token> pilhaExprRelacional = new Stack<>();
-        Token primeiroFator, segundoFator,operando;
+        Token primeiroFator, segundoFator, operando;
         primeiroFator = expr_arit();
-        
+        prepararString(saveOperation);
+
         segundoFator = null;
         operando = token_atual;
-        
+
         switch (token_atual.getTipo()) {
             case 10:
                 // igual
@@ -302,6 +323,8 @@ public class Parser {
                 segundoFator = expr_arit();
                 break;
         }
+        prepararString(saveOperation);
+
         pilhaExprRelacional.push(primeiroFator);
         pilhaExprRelacional.push(operando);
         pilhaExprRelacional.push(segundoFator);
@@ -310,7 +333,7 @@ public class Parser {
             preparar_string_expr_relacional(pilhaExprRelacional);
         } else {
             System.out.printf(
-                    "ERRO na linha: %d e na coluna: %d. Comparacao com tipos incompativeis. O ultimo token lido foi: \'%s\'",
+                    "\tERRO na linha: %d e na coluna: %d. Comparacao com tipos incompativeis. O ultimo token lido foi: \'%s\'",
                     ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
             System.exit(0);
         }
@@ -331,11 +354,14 @@ public class Parser {
             expr_arit();
         }
 
-        
-
         if (!pilhaExprArit.empty()) {
-            
+
             resultExpr = definirTipoOperacao(pilhaExprArit);
+            if (resultExpr.getLexema() != null && !resultExpr.isIdentificador(resultExpr.getLexema())) {
+                resultExpr.setName("_t" + contadorRegistradorTemporario);
+            } else if (resultExpr.getLexema() == null) {
+                resultExpr.setLexema("_t" + contadorRegistradorTemporario);
+            }
         }
 
         return resultExpr;
@@ -387,7 +413,7 @@ public class Parser {
                 Simbolo simbolToken = tabelaDeSimbolos.getSimbolo(token_atual);
                 if (simbolToken == null) {
                     System.out.printf(
-                            "SIMBOLO INEXISTENTE, na linha: %d e na coluna: %d. O ultimo Token lido foi: \'%s\'\n",
+                            "\tSIMBOLO INEXISTENTE, na linha: %d e na coluna: %d. O ultimo Token lido foi: \'%s\'\n",
                             ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
                     System.exit(0);
                 }
@@ -396,11 +422,11 @@ public class Parser {
                 } catch (NullPointerException e) {
 
                 }
-                if (simbolToken.getValor() != null) { 
+                if (simbolToken.getValor() != null) {
                     return simbolToken.getValor();
                 } else {
                     System.out.printf(
-                            "ERRO: Simbolo sem atribuicao. na linha: %d e na coluna: %d. O ultimo token lido foi: \'%s\'\n",
+                            "\tERRO: Simbolo sem atribuicao. na linha: %d e na coluna: %d. O ultimo token lido foi: \'%s\'\n",
                             ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
                     System.exit(0);
                     return null;
@@ -452,7 +478,7 @@ public class Parser {
                 }
             } catch (NullPointerException e) {
                 System.out.printf(
-                        "ERRO: Simbolo sem atribuicao. na linha: %d e na coluna: %d. O ultimo token lido foi: %s",
+                        "\tERRO: Simbolo sem atribuicao. na linha: %d e na coluna: %d. O ultimo token lido foi: %s",
                         ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
                 System.exit(0);
                 return false;
@@ -469,7 +495,7 @@ public class Parser {
                 }
             } catch (NullPointerException e) {
                 System.out.printf(
-                        "ERRO: Simbolo sem atribuicao. na linha: %d e na coluna: %d. O ultimo token lido foi: %s",
+                        "\tERRO: Simbolo sem atribuicao. na linha: %d e na coluna: %d. O ultimo token lido foi: %s",
                         ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
                 System.exit(0);
                 return false;
@@ -486,7 +512,7 @@ public class Parser {
                 }
             } catch (NullPointerException e) {
                 System.out.printf(
-                        "ERRO: Simbolo sem atribuicao. na linha: %d e na coluna: %d. O ultimo token lido foi: %s",
+                        "\tERRO: Simbolo sem atribuicao. na linha: %d e na coluna: %d. O ultimo token lido foi: %s",
                         ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
                 System.exit(0);
                 return false;
@@ -529,7 +555,7 @@ public class Parser {
                 return checarTipoAtribuicao(tokenIdentificador, simboloValor.getValor());
             }
         } else {
-            System.out.printf("SIMBOLO INEXISTENTE na linha: %d e coluna %d. O ultimo token foi: \'%s\'",
+            System.out.printf("\tSIMBOLO INEXISTENTE na linha: %d e coluna %d. O ultimo token foi: \'%s\'",
                     ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, tokenIdentificador.getLexema());
             System.exit(0);
         }
@@ -546,7 +572,6 @@ public class Parser {
         Token topo = null;
         int contador = 0;
         Integer tipo = null;
-        
 
         while (!pilha.empty()) {
             topo = pilha.pop();
@@ -588,7 +613,7 @@ public class Parser {
             contador++;
         }
 
-        if (contador==1){
+        if (contador == 1) {
             return topo;
         }
         return new Token(tipo);
@@ -606,12 +631,13 @@ public class Parser {
                     Token primeiroOperando = lista.get(contador - 1);
                     Token sinal = tkAuxiliar;
                     Token segundoOperando = lista.get(contador + 1);
-                    System.out.printf("_t%d = %s %s %s\n", contadorRegistradorTemporario, primeiroOperando.getLexema(),sinal.getLexema(), segundoOperando.getLexema());
+                    System.out.printf("\t_t%d = %s %s %s\n", contadorRegistradorTemporario, primeiroOperando.getLexema(),
+                            sinal.getLexema(), segundoOperando.getLexema());
                     lista.remove(contador - 1);
-                    lista.remove(contador-1);
-                    lista.remove(contador-1);
+                    lista.remove(contador - 1);
+                    lista.remove(contador - 1);
                     try {
-                        lista.add(contador-1,new Token("_t" + contadorRegistradorTemporario));
+                        lista.add(contador - 1, new Token("_t" + contadorRegistradorTemporario));
                     } catch (CharMalFormadoException | FloatMalFormadoException e) {
                         e.printStackTrace();
                     }
@@ -621,7 +647,7 @@ public class Parser {
                 }
                 contador++;
             } catch (ConcurrentModificationException e) {
-                
+
                 printar(lista);
                 break;
             }
@@ -632,15 +658,16 @@ public class Parser {
             try {
                 tkAuxiliar = (Token) itList.next();
                 if (tkAuxiliar.getTipo() == 40 || tkAuxiliar.getTipo() == 41) {
-                    Token primeiroOperando = lista.get(contador-1);
+                    Token primeiroOperando = lista.get(contador - 1);
                     Token sinal = tkAuxiliar;
                     Token segundoOperando = lista.get(contador + 1);
-                    System.out.printf("_t%d = %s %s %s\n", contadorRegistradorTemporario, primeiroOperando.getLexema(),sinal.getLexema(), segundoOperando.getLexema());
+                    System.out.printf("\t_t%d = %s %s %s\n", contadorRegistradorTemporario, primeiroOperando.getLexema(),
+                            sinal.getLexema(), segundoOperando.getLexema());
                     lista.remove(contador - 1);
-                    lista.remove(contador-1);
-                    lista.remove(contador-1);
+                    lista.remove(contador - 1);
+                    lista.remove(contador - 1);
                     try {
-                        lista.add(contador-1,new Token("_t" + contadorRegistradorTemporario));
+                        lista.add(contador - 1, new Token("_t" + contadorRegistradorTemporario));
                     } catch (CharMalFormadoException | FloatMalFormadoException e) {
                         e.printStackTrace();
                     }
@@ -654,7 +681,7 @@ public class Parser {
                 break;
             }
         }
-        
+
     }
 
     public void prepararString(Stack<Token> pilha) {
@@ -662,11 +689,11 @@ public class Parser {
         while (!pilha.empty()) {
             lista.add(0, pilha.pop());
         }
-        if (lista.size() == 1){
+        if (lista.size() == 1) {
 
-                System.out.printf("_t%d = %s\n", contadorRegistradorTemporario,lista.get(0).getLexema());
-                contadorRegistradorTemporario++;
-            }
+            System.out.printf("\t_t%d = %s\n", contadorRegistradorTemporario, lista.get(0).getLexema());
+            contadorRegistradorTemporario++;
+        }
         printar(lista);
     }
 
@@ -674,13 +701,31 @@ public class Parser {
     }
 
     public void preparar_string_expr_relacional(Stack<Token> pilha) {
-        Token primeiroOperando,segundoOperando, operacao;
-        while (!pilha.empty()){
-            segundoOperando = pilha.pop();
-            operacao = pilha.pop();
-            primeiroOperando = pilha.pop();
-            System.out.printf("if %s %s %s\n",primeiroOperando.getLexema(),operacao.getLexema(),segundoOperando.getLexema());
+        Token primeiroOperando, segundoOperando, operacao;
+
+        segundoOperando = pilha.pop();
+        operacao = pilha.pop();
+        primeiroOperando = pilha.pop();
+        String primeiroOperandoName, segundoOperandoName;
+
+        if (primeiroOperando.isIdentificador(primeiroOperando.getLexema())) {
+            primeiroOperandoName = primeiroOperando.getLexema();
+        } else {
+            primeiroOperandoName = primeiroOperando.getName();
         }
+
+        if (segundoOperando.isIdentificador(segundoOperando.getLexema())) {
+            segundoOperandoName = segundoOperando.getLexema();
+        } else {
+            segundoOperandoName = segundoOperando.getName();
+        }
+        System.out.printf("\t_t%d = %s %s %s\n", contadorRegistradorTemporario, primeiroOperandoName,
+                operacao.getLexema(), segundoOperandoName);
+        // System.out.printf("if %s %s
+        // %s\n",primeiroOperando.getLexema(),operacao.getLexema(),segundoOperando.getLexema());
+        System.out.printf("\tif _t%d == 0 goto label%d\n", contadorRegistradorTemporario, labelsQuantidade);
+        contadorRegistradorTemporario++;
+
     }
 
 }

@@ -5,6 +5,7 @@ import Exception.FloatMalFormadoException;
 import Buffer.Buffer;
 
 public class Token {
+    private String name;
     private String lexema;
     private int tipo;
 
@@ -30,6 +31,17 @@ public class Token {
 
     public void setTipo(int classificacao) {
         this.tipo = classificacao;
+    }
+
+    public void setName(String name){
+        this.name = name;
+    }
+    public String getName(){
+        try{
+            return this.name;
+        }catch (NullPointerException e){
+            return null;
+        }
     }
 
     public int classificarToken(String tokenLido) throws CharMalFormadoException, FloatMalFormadoException {
@@ -226,6 +238,11 @@ public class Token {
             return this.lexema.equals(object.getLexema()) && this.getTipo() == object.getTipo();
         }
         return false;
+    }
+
+
+    public boolean isIdentificador(String str){
+        return validarIdentificador(str);
     }
 
 }

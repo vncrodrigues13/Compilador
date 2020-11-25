@@ -1,20 +1,16 @@
 int main()
 {
-    int volume; 
-    int param;
-    float amp,xadrez;
-    char emblema;
-    
-    emblema = 'c'*'y';
-    volume = 2+5+3;
-    amp = 2*volume;
-    xadrez = 2+5+amp;
-    xadrez = 3/4+volume;
+    int xes,yes; 
 
-    if (volume <= xadrez)
+    xes = 20;
+    yes = 30;
+
+    do
     {
-
-    }
+        xes = xes * 1;
+        yes = yes + 3;
+    }while(yes >= 20);
+    
     
     
 
