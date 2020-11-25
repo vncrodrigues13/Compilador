@@ -44,6 +44,7 @@ public class Simbolo {
 
     public void setValor(Token valor){
         this.valor = valor;
+        this.valor.setLexema(token.getLexema());
     }
 
     @Override

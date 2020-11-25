@@ -2,14 +2,19 @@ int main()
 {
     int volume; 
     int param;
-    float amp,xadrez,flamingo, flamengo;
+    float amp,xadrez;
+    char emblema;
     
+    emblema = 'c'*'y';
+    volume = 2+5+3;
+    amp = 2*volume;
+    xadrez = 2+5+amp;
+    xadrez = 3/4+volume;
 
-    amp = 2*3+1+4/5;
-    volume = 2+5+7+1*3;
-    xadrez = 2+5+7*8/2+3;
-    flamingo = 4+5+7+9+2+3/5;
-    flamengo = 9*8*7/6/54*63+2;
+    if (volume <= xadrez)
+    {
+
+    }
     
     
 

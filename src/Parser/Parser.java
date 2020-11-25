@@ -136,6 +136,7 @@ public class Parser {
     public void comando() throws IOException, EOFemComentarioMultilinha, FloatMalFormadoException,
             ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException, OpChareNaoChar {
         if (token_atual.getTipo() == 1) {
+            
             escopo++;
             // if "("<expr_relacional>")" <comando> {else <comando>}?
             getNextToken();
@@ -147,6 +148,7 @@ public class Parser {
                     // fecha parenteses
                     getNextToken();
                     comando();
+
                     tabelaDeSimbolos.clearEscopo(escopo);
                     escopo--;
                     if (token_atual.getTipo() == 2) {
@@ -240,10 +242,10 @@ public class Parser {
                 getNextToken();
                 exprAritToken = expr_arit();
                 if (checarTipoAtribuicao(idToken, exprAritToken)) {
-                    atribuirValor(idToken, exprAritToken);
                     prepararString(saveOperation);
-                    
                     System.out.printf("%s = _t%d\n",idToken.getLexema(),contadorRegistradorTemporario-1);
+                    exprAritToken.setLexema("_t"+(contadorRegistradorTemporario-1));
+                    atribuirValor(idToken, exprAritToken);
                     
                 } else {
                     System.out.printf(
@@ -261,10 +263,13 @@ public class Parser {
     public void expr_relacional() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
             CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha, OpChareNaoChar {
         // <expr_arit> <op_relacional> <expr_arit>
-        Token primeiroFator, segundoFator;
+        Stack<Token> pilhaExprRelacional = new Stack<>();
+        Token primeiroFator, segundoFator,operando;
         primeiroFator = expr_arit();
+        
         segundoFator = null;
-
+        operando = token_atual;
+        
         switch (token_atual.getTipo()) {
             case 10:
                 // igual
@@ -297,8 +302,12 @@ public class Parser {
                 segundoFator = expr_arit();
                 break;
         }
+        pilhaExprRelacional.push(primeiroFator);
+        pilhaExprRelacional.push(operando);
+        pilhaExprRelacional.push(segundoFator);
         if (checarTipo(primeiroFator, segundoFator)) {
             // se for compatível...
+            preparar_string_expr_relacional(pilhaExprRelacional);
         } else {
             System.out.printf(
                     "ERRO na linha: %d e na coluna: %d. Comparacao com tipos incompativeis. O ultimo token lido foi: \'%s\'",
@@ -322,8 +331,10 @@ public class Parser {
             expr_arit();
         }
 
-        if (!pilhaExprArit.empty()) {
+        
 
+        if (!pilhaExprArit.empty()) {
+            
             resultExpr = definirTipoOperacao(pilhaExprArit);
         }
 
@@ -385,7 +396,7 @@ public class Parser {
                 } catch (NullPointerException e) {
 
                 }
-                if (simbolToken.getValor() != null) {
+                if (simbolToken.getValor() != null) { 
                     return simbolToken.getValor();
                 } else {
                     System.out.printf(
@@ -532,10 +543,13 @@ public class Parser {
     }
 
     public Token definirTipoOperacao(Stack<Token> pilha) throws OpChareNaoChar {
+        Token topo = null;
+        int contador = 0;
         Integer tipo = null;
+        
 
         while (!pilha.empty()) {
-            Token topo = pilha.pop();
+            topo = pilha.pop();
 
             if (topo.getTipo() == 99) {
                 Simbolo topoSimbolo = tabelaDeSimbolos.getSimbolo(topo);
@@ -571,6 +585,11 @@ public class Parser {
                     tipo = 91;
                 }
             }
+            contador++;
+        }
+
+        if (contador==1){
+            return topo;
         }
         return new Token(tipo);
     }
@@ -588,7 +607,6 @@ public class Parser {
                     Token sinal = tkAuxiliar;
                     Token segundoOperando = lista.get(contador + 1);
                     System.out.printf("_t%d = %s %s %s\n", contadorRegistradorTemporario, primeiroOperando.getLexema(),sinal.getLexema(), segundoOperando.getLexema());
-                    
                     lista.remove(contador - 1);
                     lista.remove(contador-1);
                     lista.remove(contador-1);
@@ -645,6 +663,7 @@ public class Parser {
             lista.add(0, pilha.pop());
         }
         if (lista.size() == 1){
+
                 System.out.printf("_t%d = %s\n", contadorRegistradorTemporario,lista.get(0).getLexema());
                 contadorRegistradorTemporario++;
             }
@@ -655,6 +674,13 @@ public class Parser {
     }
 
     public void preparar_string_expr_relacional(Stack<Token> pilha) {
+        Token primeiroOperando,segundoOperando, operacao;
+        while (!pilha.empty()){
+            segundoOperando = pilha.pop();
+            operacao = pilha.pop();
+            primeiroOperando = pilha.pop();
+            System.out.printf("if %s %s %s\n",primeiroOperando.getLexema(),operacao.getLexema(),segundoOperando.getLexema());
+        }
     }
 
 }

@@ -225,10 +225,12 @@ public class Buffer {
     }
 
     private Token readChar() throws CharMalFormadoException, FloatMalFormadoException {
+        boolean leuChar = false;
         // apos ele ler um ', ele le os proximos dois caracteres
 
-        if (Character.isLetterOrDigit(linhaParaArray[coluna])) {
+        if (Character.isLetterOrDigit(linhaParaArray[coluna]) && !leuChar) {
             // le a letra ou digito e vai para a proxima posicao
+            leuChar = true;
             strBuilder.append(linhaParaArray[coluna]);
             coluna++;
             if (linhaParaArray[coluna] == '\'') {
