@@ -243,9 +243,7 @@ public class Parser {
                     atribuirValor(idToken, exprAritToken);
                     prepararString(saveOperation);
                     
-                    System.out.printf("%s = _t%d\n",idToken.getLexema(),contadorRegistradorTemporario);
-                    
-                    contadorRegistradorTemporario++;
+                    System.out.printf("%s = _t%d\n",idToken.getLexema(),contadorRegistradorTemporario-1);
                     
                 } else {
                     System.out.printf(
@@ -647,11 +645,10 @@ public class Parser {
             lista.add(0, pilha.pop());
         }
         if (lista.size() == 1){
-            System.out.printf("_t%d = %s\n", contadorRegistradorTemporario,lista.get(0).getLexema());
-        }else{
-            printar(lista);
-        }
-        
+                System.out.printf("_t%d = %s\n", contadorRegistradorTemporario,lista.get(0).getLexema());
+                contadorRegistradorTemporario++;
+            }
+        printar(lista);
     }
 
     public void prepararString(Token token) {

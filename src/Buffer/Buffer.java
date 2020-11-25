@@ -163,8 +163,6 @@ public class Buffer {
                     }
                 }
             }
-        }else{
-            return null;
         }
         return null;
         
