@@ -7,8 +7,8 @@ import Exception.*;
 public class Test {
     public static void main(String [] args) throws IOException, FloatMalFormadoException,ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException,EOFemComentarioMultilinha,
             OpChareNaoChar {
-            // String path = "C:\\Users\\mathe\\Documents\\Parser\\Compilador\\src\\file\\test.txt";
-            String path = args[0];
+            String path = "C:\\Users\\mathe\\Documents\\Parser\\Compilador\\src\\file\\test.txt";
+            // String path = args[0];
             ler(path);
     }
 

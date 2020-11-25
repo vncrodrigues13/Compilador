@@ -1,15 +1,18 @@
 package Parser;
 
 import Token.Token;
+
+import java.io.BufferedWriter;
 import java.io.IOException;
 import Exception.*;
 import Scanner.ScannerCompilador;
 import Simbolo.Simbolo;
 import TabelaDeSimbolos.TabelaDeSimbolos;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Stack;
-
 import Buffer.Buffer;
 
 public class Parser {
@@ -17,25 +20,23 @@ public class Parser {
     private static Token token_atual;
     private boolean comentarioMultilinhaAberto;
     private TabelaDeSimbolos tabelaDeSimbolos;
-    private ArrayList<Token> listCalcExprArit;
-    private Token tokenCalcExprArit, tokenCalcTermo;
     private Stack<Token> pilhaExprArit;
-    private Stack<Token> pilhaCalcTermo;
     private Stack<Token> pilhaTermo;
     private int escopo;
-    private Token resultExpr,resultTermo;
-    
+    private int contadorRegistradorTemporario;
+    private Token resultExpr, resultTermo;
+    private Stack<Token> saveOperation;
 
     public Parser(ScannerCompilador scan) {
         this.scan = scan;
         token_atual = null;
         tabelaDeSimbolos = new TabelaDeSimbolos();
-        listCalcExprArit = new ArrayList<>();
-        tokenCalcExprArit = null;
-        pilhaCalcTermo = new Stack<>();
+        pilhaTermo = new Stack<>();
         pilhaExprArit = new Stack<>();
         pilhaTermo = new Stack<>();
         escopo = 0;
+        contadorRegistradorTemporario = 0;
+        saveOperation = new Stack<>();
     }
 
     public void programa() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
@@ -107,8 +108,11 @@ public class Parser {
                     id = token_atual;
                     if (varDisponivel(id)) { // verifica se a variavel n existe
                         tabelaDeSimbolos.addTabela(new Simbolo(id, escopo, tipo.getTipo()));
-                    }else{
-                        System.out.printf("ERRO na linha: %d e na coluna: %d. Variavel \'%s\' ja existente. Ultimo Token lido foi \'%s\'",ScannerCompilador.getLinha()+1,Buffer.getColuna()+1,id.getLexema(), token_atual.getLexema());
+                    } else {
+                        System.out.printf(
+                                "ERRO na linha: %d e na coluna: %d. Variavel \'%s\' ja existente. Ultimo Token lido foi \'%s\'",
+                                ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, id.getLexema(),
+                                token_atual.getLexema());
                         System.exit(0);
                     }
                     getNextToken();
@@ -116,6 +120,11 @@ public class Parser {
                         existeVirgula = true;
                         getNextToken();
                     }
+                } else {
+                    System.out.printf(
+                            "ERRO: Nome de variavel invalido. Na linha: %d, na coluna: %d. O ultimo Token lido foi: %s\n",
+                            ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
+                    System.exit(0);
                 }
             } while (existeVirgula);
 
@@ -131,7 +140,7 @@ public class Parser {
             // if "("<expr_relacional>")" <comando> {else <comando>}?
             getNextToken();
             if (token_atual.getTipo() == 20) {
-                //abre parenteses
+                // abre parenteses
                 getNextToken();
                 expr_relacional();
                 if (token_atual.getTipo() == 21) {
@@ -166,7 +175,7 @@ public class Parser {
         if (token_atual.getTipo() == 99) {
             // se for um identificador, ele vai formar uma atribuicao;
             atribuicao();
-            
+
         } else if (token_atual.getTipo() == 22) {
             // se houver uma chave, vai ser um bloco
             bloco();
@@ -232,8 +241,16 @@ public class Parser {
                 exprAritToken = expr_arit();
                 if (checarTipoAtribuicao(idToken, exprAritToken)) {
                     atribuirValor(idToken, exprAritToken);
+                    prepararString(saveOperation);
+                    
+                    System.out.printf("%s = _t%d\n",idToken.getLexema(),contadorRegistradorTemporario);
+                    
+                    contadorRegistradorTemporario++;
+                    
                 } else {
-                    System.out.printf("ATRIBUICAO INVALIDA na linha: %d e na coluna: %d. O ultimo Token lido foi: \'%s\'\n",ScannerCompilador.getLinha()+1,Buffer.getColuna()+1,token_atual.getLexema());
+                    System.out.printf(
+                            "ATRIBUICAO INVALIDA na linha: %d e na coluna: %d. O ultimo Token lido foi: \'%s\'\n",
+                            ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
                     System.exit(0);
                 }
                 if (token_atual.getTipo() == 24) {
@@ -246,10 +263,10 @@ public class Parser {
     public void expr_relacional() throws IOException, FloatMalFormadoException, ExclamacaoSemIgualException, EOF,
             CaractereInvalidoException, CharMalFormadoException, EOFemComentarioMultilinha, OpChareNaoChar {
         // <expr_arit> <op_relacional> <expr_arit>
-        Token primeiroFator,segundoFator;
+        Token primeiroFator, segundoFator;
         primeiroFator = expr_arit();
         segundoFator = null;
-        
+
         switch (token_atual.getTipo()) {
             case 10:
                 // igual
@@ -282,10 +299,12 @@ public class Parser {
                 segundoFator = expr_arit();
                 break;
         }
-        if (checarTipo(primeiroFator,segundoFator)){
+        if (checarTipo(primeiroFator, segundoFator)) {
             // se for compatível...
-        }else{
-            System.out.printf("ERRO na linha: %d e na coluna: %d. Comparacao com tipos incompativeis. O ultimo token lido foi: \'%s\'",ScannerCompilador.getLinha()+1,Buffer.getColuna()+1,token_atual.getLexema());
+        } else {
+            System.out.printf(
+                    "ERRO na linha: %d e na coluna: %d. Comparacao com tipos incompativeis. O ultimo token lido foi: \'%s\'",
+                    ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
             System.exit(0);
         }
 
@@ -299,15 +318,17 @@ public class Parser {
 
         if (token_atual.getTipo() == 40 || token_atual.getTipo() == 41) {
             // se houver soma ou subtracao
+            saveOperation.push(token_atual);
             pilhaExprArit.push(token_atual);
             getNextToken();
             expr_arit();
         }
-        
+
         if (!pilhaExprArit.empty()) {
+
             resultExpr = definirTipoOperacao(pilhaExprArit);
         }
-        
+
         return resultExpr;
 
     }
@@ -317,7 +338,8 @@ public class Parser {
         // <termo> "*" <fator> | <termo> '/' <fator> | <fator>
         // pego um fator e vejo se o proximo elemento tem uma '*' ou uma '/' se tiver eu
         // gero dou um loop com recursao
-        pilhaCalcTermo.push(fator());
+        pilhaTermo.push(fator());
+
         // pega o primeiro fator
         try {
             getNextToken();
@@ -325,12 +347,13 @@ public class Parser {
         }
         // pega o token para validar se existe alguma multiplicacao ou divisao
         if (token_atual.getTipo() == 42 || token_atual.getTipo() == 43) {
-            pilhaCalcTermo.push(token_atual);
+            saveOperation.push(token_atual);
+            pilhaTermo.push(token_atual);
             getNextToken();
             termo();
         }
-        if (!pilhaCalcTermo.empty()){
-            resultTermo = definirTipoOperacao(pilhaCalcTermo);
+        if (!pilhaTermo.empty()) {
+            resultTermo = definirTipoOperacao(pilhaTermo);
         }
         return resultTermo;
     }
@@ -353,11 +376,33 @@ public class Parser {
         } else {
             if (token_atual.getTipo() == 99) {
                 Simbolo simbolToken = tabelaDeSimbolos.getSimbolo(token_atual);
-                if (simbolToken == null){
-                    System.out.printf("SIMBOLO INEXISTENTE, na linha: %d e na coluna: %d. O ultimo Token lido foi: \'%s\'\n",ScannerCompilador.getLinha()+1,Buffer.getColuna()+1,token_atual.getLexema());
+                if (simbolToken == null) {
+                    System.out.printf(
+                            "SIMBOLO INEXISTENTE, na linha: %d e na coluna: %d. O ultimo Token lido foi: \'%s\'\n",
+                            ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
                     System.exit(0);
                 }
-                return simbolToken.getValor();
+                try {
+                    saveOperation.push(simbolToken.getValor());
+                } catch (NullPointerException e) {
+
+                }
+                if (simbolToken.getValor() != null) {
+                    return simbolToken.getValor();
+                } else {
+                    System.out.printf(
+                            "ERRO: Simbolo sem atribuicao. na linha: %d e na coluna: %d. O ultimo token lido foi: \'%s\'\n",
+                            ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
+                    System.exit(0);
+                    return null;
+                }
+
+            }
+            // se for um | <id> | <float> | <inteiro> | <char>
+            try {
+                Token t = token_atual;
+                saveOperation.push(token_atual);
+            } catch (NullPointerException e) {
             }
             return token_atual;
         }
@@ -390,37 +435,59 @@ public class Parser {
             // identificadores
             Simbolo primeiroSimbolo = tabelaDeSimbolos.getSimbolo(primeiroToken);
             Simbolo segundoSimbolo = tabelaDeSimbolos.getSimbolo(segundoToken);
-            
-            if (primeiroSimbolo.getTipo() == 6 || primeiroSimbolo.getTipo() == 7){
-                return segundoSimbolo.getTipo() == 6 || segundoSimbolo.getTipo() == 7;
-            }else{
-                return segundoSimbolo.getTipo() == 8;
+            try {
+                if (primeiroSimbolo.getTipo() == 6 || primeiroSimbolo.getTipo() == 7) {
+                    return segundoSimbolo.getTipo() == 6 || segundoSimbolo.getTipo() == 7;
+                } else {
+                    return segundoSimbolo.getTipo() == 8;
+                }
+            } catch (NullPointerException e) {
+                System.out.printf(
+                        "ERRO: Simbolo sem atribuicao. na linha: %d e na coluna: %d. O ultimo token lido foi: %s",
+                        ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
+                System.exit(0);
+                return false;
             }
         } else if (primeiroToken.getTipo() == 99 && segundoToken.getTipo() != 99) {
 
             // verifica se o tipo do identificador e o tipo do Token são iguais
             Simbolo primeiroSimbolo = tabelaDeSimbolos.getSimbolo(primeiroToken);
-            
-            if (segundoToken.getTipo() == 90 || segundoToken.getTipo() == 91){
-                return primeiroSimbolo.getTipo() == 6 ||  primeiroSimbolo.getTipo() == 7;
-            }else{
-                return primeiroSimbolo.getTipo() == 8;
+            try {
+                if (segundoToken.getTipo() == 90 || segundoToken.getTipo() == 91) {
+                    return primeiroSimbolo.getTipo() == 6 || primeiroSimbolo.getTipo() == 7;
+                } else {
+                    return primeiroSimbolo.getTipo() == 8;
+                }
+            } catch (NullPointerException e) {
+                System.out.printf(
+                        "ERRO: Simbolo sem atribuicao. na linha: %d e na coluna: %d. O ultimo token lido foi: %s",
+                        ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
+                System.exit(0);
+                return false;
             }
 
         } else if (primeiroToken.getTipo() != 99 && segundoToken.getTipo() == 99) {
             // verifica se o tipo do identificador e o tipo do Token são iguais
             Simbolo simbolo = tabelaDeSimbolos.getSimbolo(segundoToken);
-            if (primeiroToken.getTipo() == 90 || primeiroToken.getTipo() == 91){
-                return simbolo.getTipo() == 6 || simbolo.getTipo() == 7;
-            }else{
-                return simbolo.getTipo() == 8;
+            try {
+                if (primeiroToken.getTipo() == 90 || primeiroToken.getTipo() == 91) {
+                    return simbolo.getTipo() == 6 || simbolo.getTipo() == 7;
+                } else {
+                    return simbolo.getTipo() == 8;
+                }
+            } catch (NullPointerException e) {
+                System.out.printf(
+                        "ERRO: Simbolo sem atribuicao. na linha: %d e na coluna: %d. O ultimo token lido foi: %s",
+                        ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
+                System.exit(0);
+                return false;
             }
         } else {
             // caso nenhum dos dois tokens sejam identificadores
 
-            if (primeiroToken.getTipo() == 90 || primeiroToken.getTipo() == 91){
+            if (primeiroToken.getTipo() == 90 || primeiroToken.getTipo() == 91) {
                 return segundoToken.getTipo() == 90 || segundoToken.getTipo() == 91;
-            }else{
+            } else {
                 // se n for um int ou float só pode ser char
                 return segundoToken.getTipo() == 92;
             }
@@ -452,8 +519,9 @@ public class Parser {
                 Simbolo simboloValor = tabelaDeSimbolos.getSimbolo(valor);
                 return checarTipoAtribuicao(tokenIdentificador, simboloValor.getValor());
             }
-        }else{
-            System.out.printf("SIMBOLO INEXISTENTE na linha: %d e coluna %d. O ultimo token foi: \'%s\'",ScannerCompilador.getLinha()+1,Buffer.getColuna()+1,tokenIdentificador.getLexema());
+        } else {
+            System.out.printf("SIMBOLO INEXISTENTE na linha: %d e coluna %d. O ultimo token foi: \'%s\'",
+                    ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, tokenIdentificador.getLexema());
             System.exit(0);
         }
         return false;
@@ -467,6 +535,7 @@ public class Parser {
 
     public Token definirTipoOperacao(Stack<Token> pilha) throws OpChareNaoChar {
         Integer tipo = null;
+
         while (!pilha.empty()) {
             Token topo = pilha.pop();
 
@@ -506,7 +575,89 @@ public class Parser {
             }
         }
         return new Token(tipo);
+    }
 
+    public void printar(ArrayList<Token> list) {
+        ArrayList<Token> lista = list;
+        Iterator itList = lista.iterator();
+        int contador = 0;
+        Token tkAuxiliar;
+        while (itList.hasNext()) {
+            try {
+                tkAuxiliar = (Token) itList.next();
+                if (tkAuxiliar.getTipo() == 42 || tkAuxiliar.getTipo() == 43) {
+                    Token primeiroOperando = lista.get(contador - 1);
+                    Token sinal = tkAuxiliar;
+                    Token segundoOperando = lista.get(contador + 1);
+                    System.out.printf("_t%d = %s %s %s\n", contadorRegistradorTemporario, primeiroOperando.getLexema(),sinal.getLexema(), segundoOperando.getLexema());
+                    
+                    lista.remove(contador - 1);
+                    lista.remove(contador-1);
+                    lista.remove(contador-1);
+                    try {
+                        lista.add(contador-1,new Token("_t" + contadorRegistradorTemporario));
+                    } catch (CharMalFormadoException | FloatMalFormadoException e) {
+                        e.printStackTrace();
+                    }
+                    contadorRegistradorTemporario++;
+                    contador++;
+                    printar(lista);
+                }
+                contador++;
+            } catch (ConcurrentModificationException e) {
+                
+                printar(lista);
+                break;
+            }
+        }
+        itList = list.iterator();
+        contador = 0;
+        while (itList.hasNext()) {
+            try {
+                tkAuxiliar = (Token) itList.next();
+                if (tkAuxiliar.getTipo() == 40 || tkAuxiliar.getTipo() == 41) {
+                    Token primeiroOperando = lista.get(contador-1);
+                    Token sinal = tkAuxiliar;
+                    Token segundoOperando = lista.get(contador + 1);
+                    System.out.printf("_t%d = %s %s %s\n", contadorRegistradorTemporario, primeiroOperando.getLexema(),sinal.getLexema(), segundoOperando.getLexema());
+                    lista.remove(contador - 1);
+                    lista.remove(contador-1);
+                    lista.remove(contador-1);
+                    try {
+                        lista.add(contador-1,new Token("_t" + contadorRegistradorTemporario));
+                    } catch (CharMalFormadoException | FloatMalFormadoException e) {
+                        e.printStackTrace();
+                    }
+                    contadorRegistradorTemporario++;
+                    contador++;
+                    printar(lista);
+                }
+                contador++;
+            } catch (ConcurrentModificationException e) {
+                printar(lista);
+                break;
+            }
+        }
+        
+    }
+
+    public void prepararString(Stack<Token> pilha) {
+        ArrayList<Token> lista = new ArrayList<>();
+        while (!pilha.empty()) {
+            lista.add(0, pilha.pop());
+        }
+        if (lista.size() == 1){
+            System.out.printf("_t%d = %s\n", contadorRegistradorTemporario,lista.get(0).getLexema());
+        }else{
+            printar(lista);
+        }
+        
+    }
+
+    public void prepararString(Token token) {
+    }
+
+    public void preparar_string_expr_relacional(Stack<Token> pilha) {
     }
 
 }

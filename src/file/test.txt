@@ -1,9 +1,14 @@
 int main()
 {
     int volume; 
-    float amp;
+    int param;
+    float amp,xadrez,flamingo, flamengo;
+    
 
-    volume = 20; 
-    amp = volume; 
-
+    amp = 2*3+1+4/5;
+    volume = 2+5+7+1*3;
+    xadrez = 2+5+7*8/2+3;
+    flamingo = 4+5+7+9+2+3/5;
+    flamengo = 9*8*7/6/54*63+2;
+    
 }
