@@ -9,6 +9,11 @@ int main()
     {
         xes = xes * 1;
         yes = yes + 3;
+        if (xes == yes)
+        {
+            char caractere; 
+            caractere = 'y' + 'a' + 's' + 'h';
+        }
     }while(yes >= 20);
     
     

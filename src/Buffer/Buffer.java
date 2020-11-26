@@ -147,7 +147,7 @@ public class Buffer {
                         return checarComentarioMultilinha();
                     }
                 } else if (linhaParaArray[x] == '\t') {
-                    coluna += 4;
+                    coluna ++;
                     if (!comentario_multilinha_aberto) {
 
                         return new Token("\t");

@@ -141,7 +141,6 @@ public class Parser {
     public void comando() throws IOException, EOFemComentarioMultilinha, FloatMalFormadoException,
             ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException, OpChareNaoChar {
         if (token_atual.getTipo() == 1) {
-
             escopo++;
             // if "("<expr_relacional>")" <comando> {else <comando>}?
             getNextToken();
@@ -155,18 +154,15 @@ public class Parser {
                     comando();
                     tabelaDeSimbolos.clearEscopo(escopo);
                     escopo--;
+                    System.out.printf("labels%d\n",labelsQuantidade);
+                    labelsQuantidade++;
                     if (token_atual.getTipo() == 2) {
                         // else
-                        System.out.printf("labels%d\n",labelsQuantidade);
-                        labelsQuantidade++;
                         escopo++;
                         getNextToken();
                         comando();
                         tabelaDeSimbolos.clearEscopo(escopo);
                         escopo--;
-                    }else{
-                        System.out.printf("label%d:\n",labelsQuantidade);
-                        labelsQuantidade++;
                     }
                 }
             }
