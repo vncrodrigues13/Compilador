@@ -1,20 +1,24 @@
 int main()
 {
     int xes,yes; 
-
+    char caracter;
     xes = 20;
     yes = 30;
 
-    do
+    if (xes >= 20)
     {
-        xes = xes * 1;
-        yes = yes + 3;
-        if (xes == yes)
-        {
-            char caractere; 
-            caractere = 'y' + 'a' + 's' + 'h';
-        }
-    }while(yes >= 20);
+        yes = yes+ 30;
+    }
+    else
+    {
+        yes = xes + 25;
+    }
+    caracter = 't' + 'h' * 'i' / 's';
+
+    while (xes == yes)
+    {
+        
+    }
     
     
     

@@ -52,7 +52,7 @@ public class Parser {
                     getNextToken();
                     if (token_atual.getTipo() == 21) {
 
-                        System.out.printf("label%d: \n",labelsQuantidade);
+                        System.out.printf("label%d: \n", labelsQuantidade);
                         labelsQuantidade++;
                         getNextToken();
                         bloco();
@@ -154,16 +154,30 @@ public class Parser {
                     comando();
                     tabelaDeSimbolos.clearEscopo(escopo);
                     escopo--;
-                    System.out.printf("labels%d\n",labelsQuantidade);
-                    labelsQuantidade++;
-                    if (token_atual.getTipo() == 2) {
-                        // else
-                        escopo++;
+                    if (token_atual.getTipo() == 23) {
+                        // fecha chave do if
                         getNextToken();
-                        comando();
-                        tabelaDeSimbolos.clearEscopo(escopo);
-                        escopo--;
+                        if (token_atual.getTipo() == 2){
+                            System.out.printf("\tgoto label%d\n",labelsQuantidade+1);
+                        }
+                        System.out.printf("label%d:\n", labelsQuantidade);
+                        labelsQuantidade++;
+                        if (token_atual.getTipo() == 2) {
+                            // else
+                            escopo++;
+                            getNextToken();
+                            comando();
+                            tabelaDeSimbolos.clearEscopo(escopo);
+                            escopo--;
+                            if (token_atual.getTipo() == 23){
+                                // fecha chave do else
+                                System.out.printf("label%d:\n", labelsQuantidade);
+                                labelsQuantidade++;
+                                
+                            }
+                        }
                     }
+
                 }
             }
         } else if (token_atual.getTipo() == 3 || token_atual.getTipo() == 4) {
@@ -193,10 +207,10 @@ public class Parser {
             ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException, OpChareNaoChar {
         // while "("<expr_relacional>")" <comando> | do <comando> while
         // "("<expr_relacional>")"";"
-        
+
         if (token_atual.getTipo() == 3) {
             int labelIteracao = labelsQuantidade;
-            System.out.printf("label%d:\n",labelsQuantidade);
+            System.out.printf("label%d:\n", labelsQuantidade);
             labelsQuantidade++;
             escopo++;
             // 'while'
@@ -210,8 +224,8 @@ public class Parser {
                     // fecha parenteses
                     getNextToken();
                     comando();
-                    System.out.printf("\tgoto label%d\n",labelIteracao);
-                    System.out.printf("label%d: \n",labelsQuantidade);
+                    System.out.printf("\tgoto label%d\n", labelIteracao);
+                    System.out.printf("label%d: \n", labelsQuantidade);
                     // acabou o loop 'while'
                     tabelaDeSimbolos.clearEscopo(escopo);
                     escopo--;
@@ -219,7 +233,7 @@ public class Parser {
             }
         } else if (token_atual.getTipo() == 4) {
             int labelIteracao = labelsQuantidade;
-            System.out.printf("label%d\n",labelsQuantidade);
+            System.out.printf("label%d\n", labelsQuantidade);
             labelsQuantidade++;
             escopo++;
             getNextToken();
@@ -232,11 +246,11 @@ public class Parser {
                     expr_relacional();
                     if (token_atual.getTipo() == 21) {
                         getNextToken();
-                        
+
                         if (token_atual.getTipo() == 24) {
                             // acabou o loop. 'do while'
-                            System.out.printf("\tgoto label%d\n",labelIteracao);
-                            System.out.printf("label%d: \n",labelsQuantidade);
+                            System.out.printf("\tgoto label%d\n", labelIteracao);
+                            System.out.printf("label%d: \n", labelsQuantidade);
                             tabelaDeSimbolos.clearEscopo(escopo);
                             escopo--;
                         }
@@ -627,8 +641,8 @@ public class Parser {
                     Token primeiroOperando = lista.get(contador - 1);
                     Token sinal = tkAuxiliar;
                     Token segundoOperando = lista.get(contador + 1);
-                    System.out.printf("\t_t%d = %s %s %s\n", contadorRegistradorTemporario, primeiroOperando.getLexema(),
-                            sinal.getLexema(), segundoOperando.getLexema());
+                    System.out.printf("\t_t%d = %s %s %s\n", contadorRegistradorTemporario,
+                            primeiroOperando.getLexema(), sinal.getLexema(), segundoOperando.getLexema());
                     lista.remove(contador - 1);
                     lista.remove(contador - 1);
                     lista.remove(contador - 1);
@@ -657,8 +671,8 @@ public class Parser {
                     Token primeiroOperando = lista.get(contador - 1);
                     Token sinal = tkAuxiliar;
                     Token segundoOperando = lista.get(contador + 1);
-                    System.out.printf("\t_t%d = %s %s %s\n", contadorRegistradorTemporario, primeiroOperando.getLexema(),
-                            sinal.getLexema(), segundoOperando.getLexema());
+                    System.out.printf("\t_t%d = %s %s %s\n", contadorRegistradorTemporario,
+                            primeiroOperando.getLexema(), sinal.getLexema(), segundoOperando.getLexema());
                     lista.remove(contador - 1);
                     lista.remove(contador - 1);
                     lista.remove(contador - 1);
