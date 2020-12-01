@@ -1,9 +1,10 @@
 int main()
 {
     int xes,yes; 
-    char caracter;
-    xes = 20;
+    char caracter,carac;
+    caracter = carac;
     yes = 30;
+
 
     if (xes >= 20)
     {

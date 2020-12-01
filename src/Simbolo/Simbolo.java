@@ -39,7 +39,29 @@ public class Simbolo {
 
 
     public Token getValor(){
-        return this.valor;
+        if (this.valor != null){
+            return this.valor;
+        }else{
+            Token tk;
+            switch(tipo){
+                
+                case 6:
+                // int
+                    tk = new Token(90);
+                    break;
+                case 7:
+                // float
+                    tk = new Token(91);
+                    break;
+                default:
+                // char 
+                    tk = new Token(92);
+                    break;
+            }
+            tk.setLexema(token.getLexema());
+            return tk;
+        }
+        
     }
 
     public void setValor(Token valor){
@@ -56,7 +78,18 @@ public class Simbolo {
         }
         return false;
     }
-    
+
+
+    @Override
+    public String toString() {
+        return "{" +
+            " tipo='" + tipo + "'" +
+            ", token='" + token + "'" +
+            ", escopo='" + escopo + "'" +
+            ", valor='" + getValor() + "'" +
+            "}";
+    }
+
 
 
 

@@ -423,7 +423,7 @@ public class Parser {
                 Simbolo simbolToken = tabelaDeSimbolos.getSimbolo(token_atual);
                 if (simbolToken == null) {
                     System.out.printf(
-                            "\tSIMBOLO INEXISTENTE, na linha: %d e na coluna: %d. O ultimo Token lido foi: \'%s\'\n",
+                            "\tERRO SIMBOLO INEXISTENTE, na linha: %d e na coluna: %d. O ultimo Token lido foi: \'%s\'\n",
                             ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, token_atual.getLexema());
                     System.exit(0);
                 }
@@ -565,7 +565,7 @@ public class Parser {
                 return checarTipoAtribuicao(tokenIdentificador, simboloValor.getValor());
             }
         } else {
-            System.out.printf("\tSIMBOLO INEXISTENTE na linha: %d e coluna %d. O ultimo token foi: \'%s\'",
+            System.out.printf("\tERRO: SIMBOLO INEXISTENTE na linha: %d e coluna %d. O ultimo token foi: \'%s\'",
                     ScannerCompilador.getLinha() + 1, Buffer.getColuna() + 1, tokenIdentificador.getLexema());
             System.exit(0);
         }
