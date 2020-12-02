@@ -164,6 +164,7 @@ public class Parser {
                     }
                     if (token_atual.getTipo() == 2) {
                         // else
+                        saveGoto = labelsQuantidade;
                         System.out.printf("\tgoto label%d\n", saveGoto);
                         System.out.printf("label%d:\n",saveElse);
                         labelsQuantidade++;
@@ -172,7 +173,7 @@ public class Parser {
                         comando();
                         tabelaDeSimbolos.clearEscopo(escopo);
                         escopo--;
-                        System.out.printf("label%d:\n", labelsQuantidade);
+                        System.out.printf("label%d:\n", saveGoto);
                         labelsQuantidade++;
                     }else{
                         System.out.printf("label%d:\n",saveGoto);
