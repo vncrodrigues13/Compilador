@@ -1,24 +1,19 @@
 int main()
 {
-    int xes,yes; 
-    char caracter,carac;
-    caracter = carac;
-    yes = 30;
-
-
-    if (xes >= 20)
-    {
-        yes = yes+ 30;
-    }
-    else
-    {
-        yes = xes + 25;
-    }
-    caracter = 't' + 'h' * 'i' / 's';
-
-    while (xes == yes)
-    {
-        
+    int a; 
+    float b;    
+    int x;
+    a = 20;
+    b = 21;
+    while (a-1 > b*3/2){
+        x= 7;
+        if (b >=0){
+                do{
+                        b = b+1;
+                }while (b<10);
+        }else{
+            b = 0-2;
+        }
     }
     
     

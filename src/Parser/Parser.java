@@ -27,6 +27,9 @@ public class Parser {
     private Token resultExpr, resultTermo;
     private Stack<Token> saveOperation;
     private int labelsQuantidade;
+    int valorLabelIfElse = 0;
+    int valueif;
+    int saveGoto = 0, saveElse = 0;
 
     public Parser(ScannerCompilador scan) {
         this.scan = scan;
@@ -140,44 +143,41 @@ public class Parser {
 
     public void comando() throws IOException, EOFemComentarioMultilinha, FloatMalFormadoException,
             ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException, OpChareNaoChar {
+        // if "("<expr_relacional>")" <comando> {else <comando>}?
         if (token_atual.getTipo() == 1) {
             escopo++;
-            // if "("<expr_relacional>")" <comando> {else <comando>}?
             getNextToken();
             if (token_atual.getTipo() == 20) {
                 // abre parenteses
                 getNextToken();
                 expr_relacional();
+                saveGoto = labelsQuantidade-1;
+                saveElse = labelsQuantidade -1;
                 if (token_atual.getTipo() == 21) {
                     // fecha parenteses
                     getNextToken();
                     comando();
                     tabelaDeSimbolos.clearEscopo(escopo);
                     escopo--;
-                    if (token_atual.getTipo() == 23) {
-                        // fecha chave do if
+                    if (token_atual.getTipo() == 23){
                         getNextToken();
-                        if (token_atual.getTipo() == 2){
-                            System.out.printf("\tgoto label%d\n",labelsQuantidade+1);
-                        }
+                    }
+                    if (token_atual.getTipo() == 2) {
+                        // else
+                        System.out.printf("\tgoto label%d\n", saveGoto);
+                        System.out.printf("label%d:\n",saveElse);
+                        labelsQuantidade++;
+                        escopo++;
+                        getNextToken();
+                        comando();
+                        tabelaDeSimbolos.clearEscopo(escopo);
+                        escopo--;
                         System.out.printf("label%d:\n", labelsQuantidade);
                         labelsQuantidade++;
-                        if (token_atual.getTipo() == 2) {
-                            // else
-                            escopo++;
-                            getNextToken();
-                            comando();
-                            tabelaDeSimbolos.clearEscopo(escopo);
-                            escopo--;
-                            if (token_atual.getTipo() == 23){
-                                // fecha chave do else
-                                System.out.printf("label%d:\n", labelsQuantidade);
-                                labelsQuantidade++;
-                                
-                            }
-                        }
+                    }else{
+                        System.out.printf("label%d:\n",saveGoto);
                     }
-
+                    
                 }
             }
         } else if (token_atual.getTipo() == 3 || token_atual.getTipo() == 4) {
@@ -207,6 +207,7 @@ public class Parser {
             ExclamacaoSemIgualException, EOF, CaractereInvalidoException, CharMalFormadoException, OpChareNaoChar {
         // while "("<expr_relacional>")" <comando> | do <comando> while
         // "("<expr_relacional>")"";"
+        int valorCompWhile = 0;
 
         if (token_atual.getTipo() == 3) {
             int labelIteracao = labelsQuantidade;
@@ -219,26 +220,31 @@ public class Parser {
                 // abre parenteses
                 getNextToken();
                 expr_relacional();
+                valorCompWhile = labelsQuantidade-1;
+                labelsQuantidade++;
                 // expr relacional do while
                 if (token_atual.getTipo() == 21) {
                     // fecha parenteses
                     getNextToken();
                     comando();
                     System.out.printf("\tgoto label%d\n", labelIteracao);
-                    System.out.printf("label%d: \n", labelsQuantidade);
+                    System.out.printf("label%d:\n",valorCompWhile);
                     // acabou o loop 'while'
                     tabelaDeSimbolos.clearEscopo(escopo);
                     escopo--;
                 }
             }
         } else if (token_atual.getTipo() == 4) {
+            // do <comando> while
             int labelIteracao = labelsQuantidade;
-            System.out.printf("label%d\n", labelsQuantidade);
+            System.out.printf("label%d:\n", labelIteracao);
             labelsQuantidade++;
             escopo++;
             getNextToken();
             comando();
-            getNextToken();
+            if (token_atual.getTipo() == 23){
+                getNextToken();
+            }
             if (token_atual.getTipo() == 3) {
                 getNextToken();
                 if (token_atual.getTipo() == 20) {
@@ -246,11 +252,13 @@ public class Parser {
                     expr_relacional();
                     if (token_atual.getTipo() == 21) {
                         getNextToken();
-
                         if (token_atual.getTipo() == 24) {
                             // acabou o loop. 'do while'
                             System.out.printf("\tgoto label%d\n", labelIteracao);
-                            System.out.printf("label%d: \n", labelsQuantidade);
+                            //esse label quantidade de que deveria ser visto
+
+                            //esse valor de labelsQuantidade ta alterando
+                            System.out.printf("label%d: \n", labelsQuantidade-1);
                             tabelaDeSimbolos.clearEscopo(escopo);
                             escopo--;
                         }
@@ -258,6 +266,7 @@ public class Parser {
                 }
             }
         }
+
 
     }
 
@@ -735,7 +744,7 @@ public class Parser {
         // %s\n",primeiroOperando.getLexema(),operacao.getLexema(),segundoOperando.getLexema());
         System.out.printf("\tif _t%d == 0 goto label%d\n", contadorRegistradorTemporario, labelsQuantidade);
         contadorRegistradorTemporario++;
-
+        labelsQuantidade++;
     }
 
 }
