@@ -1,20 +1,18 @@
 int main()
 {
-   
-    int abc,x;
-
-    x = 203;
-
-    if (x >= 20)
-    {
-        abc = 235;
-    }
-    else
-    {
-        abc = 5000;
-    }
-
-    abc = 25;
-
-    x = abc + x;
+    int a;
+    float b;
+    int x;
+    while (a-1 > b*3/2){
+    x= 7;
+	if (b >=0){
+		    do{
+                	b = b+1;
+		    }while (b<10);
+	}
+	b = 0-2;
+	while (a <0){
+		a = x+1
+	}
+}
 }
